@@ -41,7 +41,7 @@ export class SkeletonLoader {
    *
    * @param {Element|string} target
    * @param {import('./scan.js').ScanOptions} [options]
-   * @returns {object} handle — { root, overlay, blocks, update(), setEffect(), destroy() }
+   * @returns {object} handle — { root, overlay, blocks, update(), setEffect(), setTheme(), destroy() }
    */
   static scan(target, options = {}) {
     const root = resolveTarget(target);
@@ -55,6 +55,7 @@ export class SkeletonLoader {
       get blocks() { return built.blocks; },
       update: () => built.update(),
       setEffect: (effect) => built.setEffect(effect),
+      setTheme: (theme) => built.setTheme(theme),
       destroy: () => {
         built.destroy();
         handles.delete(root);

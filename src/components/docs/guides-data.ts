@@ -700,17 +700,21 @@ customElements.define('loading-card', LoadingCard);`,
   SkeletonLoader,
   type SkeletonHandle,
   type SkeletonEffect,
+  type SkeletonTheme,
   EFFECTS, // ['shimmer', 'wave', 'pulse', 'fade', 'blink', 'sheen', 'bounce', 'none']
+  THEMES,  // ['light', 'dark', 'auto']
 } from 'universal-skeleton';
 
 const handle: SkeletonHandle = SkeletonLoader.scan('#app', {
   effect: 'wave',          // only the 8 valid names compile
+  theme: 'auto',           // 'light' | 'dark' | 'auto' — follows the OS by default
   duration: 900,           // string | number
   radius: 12,
   exclude: (el) => el.classList.contains('ads'),
 });
 
-handle.setEffect('fade');   // autocompletes all effect names
+handle.setEffect('fade');  // autocompletes all effect names
+handle.setTheme('dark');   // swap the palette at runtime
 handle.destroy();`,
         },
       },
@@ -720,7 +724,8 @@ handle.destroy();`,
           lang: 'typescript',
           code: `interface SkeletonOptions {
   effect?: SkeletonEffect;              // 'shimmer' | 'wave' | 'pulse' | 'fade' | 'blink' | 'sheen' | 'bounce' | 'none'
-  color?: string;                       // any CSS color
+  theme?: SkeletonTheme;                // 'light' | 'dark' | 'auto' — auto follows prefers-color-scheme
+  color?: string;                       // any CSS color — wins over the theme palette
   highlightColor?: string;
   duration?: string | number;           // '2s' or 900 (ms)
   radius?: number | null;

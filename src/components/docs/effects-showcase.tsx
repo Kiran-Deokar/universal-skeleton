@@ -5,7 +5,6 @@ import { SkeletonLoader, type SkeletonEffect, type SkeletonHandle } from '@/lib/
 import { CodeBlock } from './code-block';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 
 const EFFECT_INFO: { effect: SkeletonEffect; name: string; desc: string }[] = [
   { effect: 'shimmer', name: 'shimmer', desc: 'Moving gradient wave — the Facebook / YouTube classic. Default.' },
@@ -42,6 +41,7 @@ function EffectSurface({ effect, duration, color, highlight, radius, seed }: {
     if (!el) return;
     const handle = SkeletonLoader.scan(el, {
       effect,
+      theme: 'light', // demo surface is always white
       duration,
       color,
       highlightColor: highlight,
@@ -78,15 +78,15 @@ function RuntimeSwitcher({ duration }: { duration: number }) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const handle = SkeletonLoader.scan(el, { effect: current, duration });
+    const handle = SkeletonLoader.scan(el, { effect: current, theme: 'light', duration });
     handleRef.current = handle;
     return () => handle.destroy();
   }, [duration]);
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
-      <h3 className="font-medium text-white">Switch at runtime — setEffect()</h3>
-      <p className="mt-1 text-sm text-zinc-400">
+    <div className="rounded-2xl border border-border bg-card/50 p-5">
+      <h3 className="font-medium text-foreground">Switch at runtime — setEffect()</h3>
+      <p className="mt-1 text-sm text-muted-foreground">
         One persistent handle; the animation swaps instantly without re-measuring the UI.
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
@@ -97,10 +97,10 @@ function RuntimeSwitcher({ duration }: { duration: number }) {
               handleRef.current?.setEffect(e.effect);
               setCurrent(e.effect);
             }}
-            className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`rounded-lg border px-3 py-1.5 font-mono text-xs transition-colors ${
               current === e.effect
-                ? 'border-emerald-500 bg-emerald-950 text-emerald-300'
-                : 'border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200'
+                ? 'border-emerald-600 bg-emerald-100 text-emerald-700 dark:border-emerald-500 dark:bg-emerald-950 dark:text-emerald-300'
+                : 'border-border bg-card text-muted-foreground hover:text-accent-foreground'
             }`}
           >
             {e.effect}
@@ -135,21 +135,21 @@ export function EffectsShowcase() {
   return (
     <div className="space-y-12">
       <section>
-        <h1 className="text-3xl font-bold text-white">Eight animation effects</h1>
-        <p className="mt-3 max-w-3xl leading-7 text-zinc-400">
+        <h1 className="text-3xl font-bold text-foreground">Eight animation effects</h1>
+        <p className="mt-3 max-w-3xl leading-7 text-muted-foreground">
           Every effect is pure CSS on the same scanned skeleton — pick one per call with the{' '}
-          <code className="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-emerald-300">effect</code>{' '}
+          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-emerald-700 dark:text-emerald-300">effect</code>{' '}
           option, change it live with{' '}
-          <code className="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-emerald-300">handle.setEffect()</code>,
+          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-emerald-700 dark:text-emerald-300">handle.setEffect()</code>,
           or set it declaratively with{' '}
-          <code className="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-emerald-300">&lt;skeleton-screen effect=&quot;wave&quot;&gt;</code>.
+          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-emerald-700 dark:text-emerald-300">&lt;skeleton-screen effect=&quot;wave&quot;&gt;</code>.
           Tune the controls below — every demo card updates in real time.
         </p>
 
-        <div className="mt-6 grid gap-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 sm:grid-cols-3">
+        <div className="mt-6 grid gap-6 rounded-2xl border border-border bg-card/50 p-5 sm:grid-cols-3">
           <div>
-            <Label className="text-zinc-300">
-              Duration — <span className="font-mono text-emerald-300">{duration}ms</span>
+            <Label className="text-foreground">
+              Duration — <span className="font-mono text-emerald-600 dark:text-emerald-300">{duration}ms</span>
             </Label>
             <Slider
               className="mt-3"
@@ -159,17 +159,19 @@ export function EffectsShowcase() {
               value={[duration]}
               onValueChange={(v) => setDuration(v[0])}
             />
-            <p className="mt-1 text-xs text-zinc-500">One animation cycle (option: duration)</p>
+            <p className="mt-1 text-xs text-muted-foreground">One animation cycle (option: duration)</p>
           </div>
           <div>
-            <Label className="text-zinc-300">Base color / highlight preset</Label>
+            <Label className="text-foreground">Base color / highlight preset</Label>
             <div className="mt-3 flex flex-wrap gap-2">
               {Object.entries(COLOR_PRESETS).map(([key, c]) => (
                 <button
                   key={key}
                   onClick={() => { setPreset(key as keyof typeof COLOR_PRESETS); setSeed((s) => s + 1); }}
                   className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs transition-colors ${
-                    preset === key ? 'border-emerald-500 text-emerald-300' : 'border-zinc-700 text-zinc-400 hover:text-zinc-200'
+                    preset === key
+                      ? 'border-emerald-600 text-emerald-700 dark:border-emerald-500 dark:text-emerald-300'
+                      : 'border-border text-muted-foreground hover:text-accent-foreground'
                   }`}
                 >
                   <span className="h-3 w-3 rounded-full" style={{ background: c.color }} />
@@ -177,11 +179,11 @@ export function EffectsShowcase() {
                 </button>
               ))}
             </div>
-            <p className="mt-1 text-xs text-zinc-500">Options: color + highlightColor</p>
+            <p className="mt-1 text-xs text-muted-foreground">Options: color + highlightColor</p>
           </div>
           <div>
-            <Label className="text-zinc-300">
-              Corner radius — <span className="font-mono text-emerald-300">{radius}px</span>
+            <Label className="text-foreground">
+              Corner radius — <span className="font-mono text-emerald-600 dark:text-emerald-300">{radius}px</span>
             </Label>
             <Slider
               className="mt-3"
@@ -191,24 +193,24 @@ export function EffectsShowcase() {
               value={[radius]}
               onValueChange={(v) => setRadius(v[0])}
             />
-            <p className="mt-1 text-xs text-zinc-500">Rect blocks only; text bars stay pill-shaped</p>
+            <p className="mt-1 text-xs text-muted-foreground">Rect blocks only; text bars stay pill-shaped</p>
           </div>
         </div>
       </section>
 
       <section className="grid gap-5 md:grid-cols-2">
         {EFFECT_INFO.map((e) => (
-          <div key={e.effect} className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
+          <div key={e.effect} className="flex flex-col rounded-2xl border border-border bg-card/50 p-5">
             <div className="flex items-center justify-between">
-              <h3 className="font-mono text-base font-semibold text-emerald-300">{e.name}</h3>
+              <h3 className="font-mono text-base font-semibold text-emerald-600 dark:text-emerald-300">{e.name}</h3>
               <button
                 onClick={() => setSeed((s) => s + 1)}
-                className="text-xs text-zinc-500 transition-colors hover:text-zinc-300"
+                className="text-xs text-muted-foreground/70 transition-colors hover:text-foreground"
               >
                 rescan
               </button>
             </div>
-            <p className="mt-1.5 text-sm leading-6 text-zinc-400">{e.desc}</p>
+            <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{e.desc}</p>
             <div className="mt-4">
               <EffectSurface
                 effect={e.effect}
@@ -233,9 +235,9 @@ export function EffectsShowcase() {
       <RuntimeSwitcher duration={duration} />
 
       <section className="grid gap-5 lg:grid-cols-2">
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
-          <h3 className="font-medium text-white">Declarative — Web Component attribute</h3>
-          <p className="mt-1.5 text-sm text-zinc-400">
+        <div className="rounded-2xl border border-border bg-card/50 p-5">
+          <h3 className="font-medium text-foreground">Declarative — Web Component attribute</h3>
+          <p className="mt-1.5 text-sm text-muted-foreground">
             The effect attribute is reactive: change it in any framework and the animation swaps.
           </p>
           <div className="mt-4">
@@ -248,9 +250,9 @@ export function EffectsShowcase() {
             />
           </div>
         </div>
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
-          <h3 className="font-medium text-white">Global — CSS variables</h3>
-          <p className="mt-1.5 text-sm text-zinc-400">
+        <div className="rounded-2xl border border-border bg-card/50 p-5">
+          <h3 className="font-medium text-foreground">Global — CSS variables</h3>
+          <p className="mt-1.5 text-sm text-muted-foreground">
             Restyle every skeleton on the page without touching any code — plain CSS, no build tools.
           </p>
           <div className="mt-4">
@@ -268,14 +270,101 @@ export function EffectsShowcase() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
-        <h3 className="font-medium text-white">Reduced motion</h3>
-        <p className="mt-1.5 text-sm leading-6 text-zinc-400">
-          Users with <code className="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-xs text-emerald-300">prefers-reduced-motion: reduce</code>{' '}
+      <section className="grid gap-5 lg:grid-cols-2">
+        <div className="rounded-2xl border border-border bg-card/50 p-5">
+          <h3 className="font-medium text-foreground">Light, dark or follow the OS</h3>
+          <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+            Blocks pick their grey from the <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-emerald-700 dark:text-emerald-300">theme</code> palette.
+            The default <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-emerald-700 dark:text-emerald-300">auto</code> follows
+            the user&apos;s <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-emerald-700 dark:text-emerald-300">prefers-color-scheme</code> with
+            zero JavaScript — switch this site&apos;s theme (sun icon) and watch the playground skeletons adapt.
+          </p>
+          <div className="mt-4">
+            <CodeBlock
+              language="javascript"
+              label="palettes"
+              code={`SkeletonLoader.scan('#app');                     // auto (default)
+SkeletonLoader.scan('#app', { theme: 'dark' });  // force dark blocks
+handle.setTheme('light');                        // switch at runtime
+
+// the palette used by each value:
+// light → #e5e7eb blocks, dark → #27272a blocks`}
+            />
+          </div>
+        </div>
+        <div className="rounded-2xl border border-border bg-card/50 p-5">
+          <h3 className="font-medium text-foreground">Live — dark palette on a dark surface</h3>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            The same card on a dark surface, skeletonized with <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-emerald-700 dark:text-emerald-300">theme: &apos;dark&apos;</code>.
+          </p>
+          <DarkSurfaceDemo />
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-border bg-card/50 p-5">
+        <h3 className="font-medium text-foreground">Reduced motion</h3>
+        <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+          Users with <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-emerald-700 dark:text-emerald-300">prefers-reduced-motion: reduce</code>{' '}
           always get static blocks — every effect ships with the media query built in, so you never
           need to handle it yourself.
         </p>
       </section>
+    </div>
+  );
+}
+
+/** Mini dark-surface demo: scan with theme 'dark' over a dark card. */
+function DarkSurfaceDemo() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(true);
+  const [effect, setEffect] = useState<SkeletonEffect>('shimmer');
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !active) return;
+    const handle = SkeletonLoader.scan(el, { effect, theme: 'dark' });
+    return () => handle.destroy();
+  }, [active, effect]);
+
+  return (
+    <div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {(['shimmer', 'wave', 'fade'] as SkeletonEffect[]).map((e) => (
+          <button
+            key={e}
+            onClick={() => setEffect(e)}
+            className={`rounded-lg border px-3 py-1.5 font-mono text-xs transition-colors ${
+              effect === e
+                ? 'border-emerald-600 bg-emerald-100 text-emerald-700 dark:border-emerald-500 dark:bg-emerald-950 dark:text-emerald-300'
+                : 'border-border bg-card text-muted-foreground hover:text-accent-foreground'
+            }`}
+          >
+            {e}
+          </button>
+        ))}
+        <button
+          onClick={() => setActive((a) => !a)}
+          className="rounded-lg border border-border bg-card px-3 py-1.5 font-mono text-xs text-muted-foreground transition-colors hover:text-accent-foreground"
+        >
+          {active ? 'restore()' : 'scan()'}
+        </button>
+      </div>
+      <div className="mt-4">
+        <div ref={ref} className="rounded-xl bg-zinc-900 p-4">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-full bg-zinc-700" />
+            <div>
+              <div className="h-3 w-28 rounded bg-zinc-700" />
+              <div className="mt-1.5 h-2.5 w-20 rounded bg-zinc-700/70" />
+            </div>
+            <div className="h-7 rounded-md bg-zinc-700 px-3 text-xs leading-7 text-white">Follow</div>
+          </div>
+          <div className="mt-3 space-y-1.5">
+            <div className="h-2.5 w-full rounded bg-zinc-700" />
+            <div className="h-2.5 w-2/3 rounded bg-zinc-700" />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

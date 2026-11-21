@@ -47,16 +47,17 @@ function HeroDemo() {
   }, [mounted]);
 
   return (
-    <div className="rounded-3xl border border-zinc-800 bg-zinc-900/50 p-6 shadow-2xl shadow-black/40">
+    <div className="rounded-3xl border border-border bg-card/50 p-6 shadow-2xl shadow-black/10 dark:shadow-black/40">
       <div className="mb-4 flex items-center gap-2">
         <span className={`h-2.5 w-2.5 rounded-full ${loading ? 'bg-amber-400' : 'bg-emerald-400'}`} />
-        <span className="font-mono text-xs text-zinc-400">
+        <span className="font-mono text-xs text-muted-foreground">
           {loading ? 'loading — skeleton is mirroring the real UI' : 'data ready — real UI restored'}
         </span>
       </div>
-      {/* The Web Component in its purest form: toggle one attribute. */}
+      {/* The Web Component in its purest form: toggle one attribute.
+          theme="light" — this demo surface is always white. */}
       {mounted ? (
-        <skeleton-screen loading={loading ? '' : undefined} effect="shimmer">
+        <skeleton-screen loading={loading ? '' : undefined} effect="shimmer" theme="light">
           <ProfileCard variant={variant} />
         </skeleton-screen>
       ) : (
@@ -73,10 +74,10 @@ function HeroDemo() {
 function InstallBox() {
   return (
     <Tabs defaultValue="npm" className="w-full max-w-xl">
-      <TabsList className="bg-zinc-900 border border-zinc-800">
-        <TabsTrigger value="npm" className="data-[state=active]:text-emerald-300">npm</TabsTrigger>
-        <TabsTrigger value="cdn" className="data-[state=active]:text-emerald-300">CDN</TabsTrigger>
-        <TabsTrigger value="esm" className="data-[state=active]:text-emerald-300">ESM</TabsTrigger>
+      <TabsList className="border border-border bg-muted/50">
+        <TabsTrigger value="npm" className="data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-300">npm</TabsTrigger>
+        <TabsTrigger value="cdn" className="data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-300">CDN</TabsTrigger>
+        <TabsTrigger value="esm" className="data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-300">ESM</TabsTrigger>
       </TabsList>
       <TabsContent value="npm">
         <CodeBlock bare language="bash" code={'npm install universal-skeleton'} />
@@ -105,7 +106,7 @@ function InstallBox() {
 
 function ScanDemo() {
   const [active, setActive] = useState(true);
-  const ref = useSkeleton(active, () => ({ effect: 'shimmer' }), []);
+  const ref = useSkeleton(active, () => ({ effect: 'shimmer', theme: 'light' }), []);
   return (
     <div>
       <div ref={ref} className="rounded-xl bg-white p-4">
@@ -120,7 +121,7 @@ function ScanDemo() {
       <Button
         size="sm"
         variant="outline"
-        className="mt-3 border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-800 hover:text-white"
+        className="mt-3"
         onClick={() => setActive((a) => !a)}
       >
         <Scan className="mr-1.5 h-3.5 w-3.5" />
@@ -141,7 +142,7 @@ function WhileDemo() {
     SkeletonLoader.while(
       new Promise((resolve) => window.setTimeout(resolve, 1700)),
       ref.current,
-      { effect: 'fade', duration: 1100 }
+      { effect: 'fade', duration: 1100, theme: 'light' }
     ).then(() => {
       setLoadedAt(new Date().toLocaleTimeString());
       setBusy(false);
@@ -151,7 +152,7 @@ function WhileDemo() {
   return (
     <div>
       <div ref={ref} className="rounded-xl bg-white p-4">
-        <p className="text-sm text-zinc-700">
+        <p className="text-sm text-zinc-700 dark:text-zinc-200">
           {loadedAt ? `Feed loaded at ${loadedAt}` : 'Click the button — skeleton covers the card while the promise runs.'}
         </p>
       </div>
@@ -159,7 +160,7 @@ function WhileDemo() {
         size="sm"
         variant="outline"
         disabled={busy}
-        className="mt-3 border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-800 hover:text-white"
+        className="mt-3"
         onClick={run}
       >
         <RefreshCcw className={`mr-1.5 h-3.5 w-3.5 ${busy ? 'animate-spin' : ''}`} />
@@ -171,7 +172,7 @@ function WhileDemo() {
 
 function DataAttrDemo() {
   const [active, setActive] = useState(true);
-  const ref = useSkeleton(active, () => ({ effect: 'bounce' }), []);
+  const ref = useSkeleton(active, () => ({ effect: 'bounce', theme: 'light' }), []);
   return (
     <div>
       <div ref={ref} className="rounded-xl bg-white p-4">
@@ -184,7 +185,7 @@ function DataAttrDemo() {
       <Button
         size="sm"
         variant="outline"
-        className="mt-3 border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-800 hover:text-white"
+        className="mt-3"
         onClick={() => setActive((a) => !a)}
       >
         <Tags className="mr-1.5 h-3.5 w-3.5" />
@@ -201,7 +202,7 @@ const FEATURES = [
   { icon: Boxes, title: 'One Web Component', text: '<skeleton-screen loading> works in every framework because custom elements are the one component format they all speak.' },
   { icon: Sparkles, title: '8 animation effects', text: 'shimmer, wave, pulse, fade, blink, sheen, bounce and none — switchable at runtime via setEffect().' },
   { icon: Tags, title: 'data-skeleton attributes', text: 'Force circles, rectangles, text bars or exclude subtrees with plain HTML attributes — zero configuration code.' },
-  { icon: Palette, title: 'Themeable via CSS variables', text: '--usk-color, --usk-highlight, --usk-radius and --usk-duration restyle every skeleton globally or per call.' },
+  { icon: Palette, title: 'Light, dark & auto themes', text: 'Skeleton blocks follow prefers-color-scheme automatically, or force a palette with the theme option and setTheme().' },
   { icon: RefreshCcw, title: 'Responsive by default', text: 'A ResizeObserver rebuilds the skeleton whenever the layout changes — resize the window and it keeps mirroring.' },
   { icon: Accessibility, title: 'Accessible out of the box', text: 'aria-busy on the scanned region, aria-hidden on the overlay, blocks phantom clicks, honors prefers-reduced-motion.' },
   { icon: FileCode2, title: 'TypeScript-ready', text: 'Ships with .d.ts declarations and JSX typings — full IntelliSense in TS projects, no @types package needed.' },
@@ -215,7 +216,7 @@ const STACKS = [
 
 const STATS = [
   { icon: Package, value: '0', label: 'runtime dependencies' },
-  { icon: Zap, value: '~4.3 KB', label: 'gzipped CDN build' },
+  { icon: Zap, value: '~4.4 KB', label: 'gzipped CDN build' },
   { icon: Sparkles, value: '8', label: 'animation effects' },
   { icon: Boxes, value: '18+', label: 'stacks it works with' },
 ];
@@ -226,14 +227,14 @@ export function Landing({ onNavigate }: { onNavigate?: (view: string) => void })
       {/* Hero */}
       <section className="grid items-center gap-10 lg:grid-cols-2">
         <div>
-          <Badge variant="outline" className="mb-5 border-emerald-800 bg-emerald-950/50 font-mono text-emerald-300">
+          <Badge variant="outline" className="mb-5 border-emerald-300 bg-emerald-50 font-mono text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
             v1.1.0 · MIT · zero dependencies
           </Badge>
-          <h1 className="text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl">
+          <h1 className="text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl">
             Skeleton screens that look like{' '}
-            <span className="text-emerald-400">your real UI</span> — in every framework.
+            <span className="text-emerald-600 dark:text-emerald-400">your real UI</span> — in every framework.
           </h1>
-          <p className="mt-5 max-w-lg text-base leading-7 text-zinc-400">
+          <p className="mt-5 max-w-lg text-base leading-7 text-muted-foreground">
             universal-skeleton scans the DOM you already have and paints grey placeholders over it,
             so the skeleton always mirrors the exact layout of your content. Plain HTML, React,
             Vue, Angular, Svelte or jQuery — one package, no adapters, no dependencies.
@@ -252,7 +253,6 @@ export function Landing({ onNavigate }: { onNavigate?: (view: string) => void })
             <Button
               size="lg"
               variant="outline"
-              className="border-zinc-700 bg-transparent text-zinc-200 hover:bg-zinc-800 hover:text-white"
               onClick={() => onNavigate?.('playground')}
             >
               Open the playground
@@ -265,18 +265,18 @@ export function Landing({ onNavigate }: { onNavigate?: (view: string) => void })
       {/* Stats */}
       <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {STATS.map((s) => (
-          <div key={s.label} className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 text-center">
-            <s.icon className="mx-auto h-5 w-5 text-emerald-400" />
-            <div className="mt-2 text-2xl font-bold text-white">{s.value}</div>
-            <div className="mt-1 text-xs text-zinc-500">{s.label}</div>
+          <div key={s.label} className="rounded-2xl border border-border bg-card/50 p-5 text-center">
+            <s.icon className="mx-auto h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            <div className="mt-2 text-2xl font-bold text-foreground">{s.value}</div>
+            <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
           </div>
         ))}
       </section>
 
       {/* How it works */}
       <section>
-        <h2 className="text-2xl font-semibold text-white">Three ways to use it</h2>
-        <p className="mt-2 max-w-2xl text-zinc-400">
+        <h2 className="text-2xl font-semibold text-foreground">Three ways to use it</h2>
+        <p className="mt-2 max-w-2xl text-muted-foreground">
           The same engine powers all three APIs. Try each one live — every demo below runs the
           real library.
         </p>
@@ -286,14 +286,14 @@ export function Landing({ onNavigate }: { onNavigate?: (view: string) => void })
             { n: '2', title: 'while() — async helper', body: 'Wraps a promise: skeleton in, skeleton out — even when the promise rejects. Optional minDuration.', demo: <WhileDemo /> },
             { n: '3', title: '<skeleton-screen> — markup', body: 'Wrap your markup once, toggle the loading attribute from any framework code.', demo: <DataAttrDemo /> },
           ].map((s) => (
-            <div key={s.n} className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
+            <div key={s.n} className="rounded-2xl border border-border bg-card/50 p-5">
               <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-950 font-mono text-sm font-semibold text-emerald-300 ring-1 ring-emerald-800">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 font-mono text-sm font-semibold text-emerald-700 ring-1 ring-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 dark:ring-emerald-800">
                   {s.n}
                 </span>
-                <h3 className="font-medium text-white">{s.title}</h3>
+                <h3 className="font-medium text-foreground">{s.title}</h3>
               </div>
-              <p className="mt-2 text-sm leading-6 text-zinc-400">{s.body}</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">{s.body}</p>
               <div className="mt-4">{s.demo}</div>
             </div>
           ))}
@@ -302,13 +302,13 @@ export function Landing({ onNavigate }: { onNavigate?: (view: string) => void })
 
       {/* Features */}
       <section>
-        <h2 className="text-2xl font-semibold text-white">Everything included</h2>
+        <h2 className="text-2xl font-semibold text-foreground">Everything included</h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURES.map((f) => (
-            <div key={f.title} className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 transition-colors hover:border-zinc-700">
-              <f.icon className="h-5 w-5 text-emerald-400" />
-              <h3 className="mt-3 font-medium text-white">{f.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-zinc-400">{f.text}</p>
+            <div key={f.title} className="rounded-2xl border border-border bg-card/50 p-5 transition-colors hover:border-emerald-500/40">
+              <f.icon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              <h3 className="mt-3 font-medium text-foreground">{f.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">{f.text}</p>
             </div>
           ))}
         </div>
@@ -316,14 +316,14 @@ export function Landing({ onNavigate }: { onNavigate?: (view: string) => void })
 
       {/* Stacks */}
       <section>
-        <h2 className="text-2xl font-semibold text-white">Runs anywhere the DOM runs</h2>
-        <p className="mt-2 max-w-2xl text-zinc-400">
+        <h2 className="text-2xl font-semibold text-foreground">Runs anywhere the DOM runs</h2>
+        <p className="mt-2 max-w-2xl text-muted-foreground">
           No adapters, no peer dependencies: it only talks to the browser. If your stack renders
           HTML — server templates included — it works.
         </p>
         <div className="mt-5 flex flex-wrap gap-2">
           {STACKS.map((s) => (
-            <span key={s} className="rounded-full border border-zinc-800 bg-zinc-900/60 px-3.5 py-1.5 text-sm text-zinc-300">
+            <span key={s} className="rounded-full border border-border bg-card/60 px-3.5 py-1.5 text-sm text-muted-foreground">
               {s}
             </span>
           ))}

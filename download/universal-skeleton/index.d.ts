@@ -16,12 +16,20 @@ export type SkeletonEffect =
   | 'bounce'
   | 'none';
 
+/** Color palette of the skeleton blocks. 'auto' follows prefers-color-scheme. */
+export type SkeletonTheme = 'light' | 'dark' | 'auto';
+
 /** Every animation effect the engine knows, in display order. */
 export declare const EFFECTS: SkeletonEffect[];
+
+/** Every theme palette the engine knows. */
+export declare const THEMES: SkeletonTheme[];
 
 export interface SkeletonOptions {
   /** Animation style. Default: 'shimmer'. */
   effect?: SkeletonEffect;
+  /** Block color palette. Default: 'auto' — follows prefers-color-scheme. */
+  theme?: SkeletonTheme;
   /** Base grey of every skeleton block (any CSS color). */
   color?: string;
   /** Bright band color of shimmer / wave / sheen effects. */
@@ -51,6 +59,8 @@ export interface SkeletonHandle {
   update(): void;
   /** Switch the animation at runtime — any SkeletonEffect value. */
   setEffect(effect: SkeletonEffect): void;
+  /** Switch the color palette at runtime — 'light' | 'dark' | 'auto'. */
+  setTheme(theme: SkeletonTheme): void;
   /** Remove the skeleton and restore the real UI. Idempotent. */
   destroy(): void;
 }
@@ -107,6 +117,7 @@ export interface SkeletonScreenAttributes {
   /** Present (or "true"/"1"/"on") shows the skeleton. */
   loading?: boolean | string;
   effect?: SkeletonEffect;
+  theme?: SkeletonTheme;
   color?: string;
   'highlight-color'?: string;
   duration?: string | number;

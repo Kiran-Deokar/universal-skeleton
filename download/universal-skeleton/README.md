@@ -143,6 +143,7 @@ The returned `handle`:
 | `handle.blocks` | Number of skeleton blocks currently painted |
 | `handle.update()` | Re-measure the real UI and rebuild every block |
 | `handle.setEffect(effect)` | Switch the animation at runtime (any of the 8 effects) |
+| `handle.setTheme(theme)` | Switch the color palette at runtime — `'light'`, `'dark'`, `'auto'` |
 | `handle.destroy()` | Remove the skeleton and restore the real UI (idempotent) |
 
 ### `SkeletonLoader.restore(target)`
@@ -166,7 +167,8 @@ const data = await SkeletonLoader.while(() => api.getFeed(), '#feed', { minDurat
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
 | `effect` | `'shimmer' \| 'wave' \| 'pulse' \| 'fade' \| 'blink' \| 'sheen' \| 'bounce' \| 'none'` | `'shimmer'` | Animation style |
-| `color` | string | `#e5e7eb` | Base grey of every block (any CSS color) |
+| `theme` | `'light' \| 'dark' \| 'auto'` | `'auto'` | Block color palette — `'auto'` follows `prefers-color-scheme` |
+| `color` | string | `#e5e7eb` | Base grey of every block (any CSS color — wins over `theme`) |
 | `highlightColor` | string | `#f3f4f6` | Bright band of shimmer / wave / sheen |
 | `duration` | string \| number | `1.4s` | One animation cycle — CSS time (`'2s'`) or milliseconds (`900`) |
 | `radius` | number | `8` | Corner radius (px) for rectangular blocks; text bars are always pills |
@@ -218,6 +220,7 @@ Wrap any markup; toggle the boolean `loading` attribute to switch between skelet
 | --- | --- |
 | `loading` | Present (or `""`, `"true"`, `"1"`, `"on"`) shows the skeleton; `"false"` or removal reveals the UI |
 | `effect` | `shimmer` \| `wave` \| `pulse` \| `fade` \| `blink` \| `sheen` \| `bounce` \| `none` |
+| `theme` | `light` \| `dark` \| `auto` — block palette (default `auto`) |
 | `color` | Base block color |
 | `highlight-color` | Shimmer / wave band color |
 | `duration` | One animation cycle — `"2s"` or `"900"` (ms) |
@@ -382,6 +385,24 @@ Speed is one knob — the `duration` option, the `duration` attribute on `<skele
 
 ## Theming
 
+### Light, dark or follow the OS
+
+Every skeleton has a color palette. The default is `auto` — blocks pick grey for light UIs and dark zinc for dark UIs automatically via `prefers-color-scheme`, with zero JavaScript:
+
+```js
+SkeletonLoader.scan('#app');                      // auto — follows the OS
+SkeletonLoader.scan('#app', { theme: 'dark' });   // force dark blocks
+handle.setTheme('light');                         // switch at runtime
+```
+
+```html
+<skeleton-screen loading theme="dark" effect="shimmer">…</skeleton-screen>
+```
+
+Any explicit `color` / `highlightColor` option (or `data-skeleton-color` attribute) always wins over the palette.
+
+### Fine-tuning with CSS variables
+
 Global — plain CSS variables (no build tools needed):
 
 ```css
@@ -390,6 +411,12 @@ Global — plain CSS variables (no build tools needed):
   --usk-highlight: #f3f4f6;  /* shimmer band   */
   --usk-radius: 8px;         /* rect corners   */
   --usk-duration: 1.4s;      /* animation loop */
+}
+
+/* dark surfaces — pair with theme="dark" or set per-surface: */
+.dark-surface {
+  --usk-color: #27272a;
+  --usk-highlight: #3f3f46;
 }
 ```
 

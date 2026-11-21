@@ -15,6 +15,24 @@ var SKELETON_CSS = (
    positioned overlay inside it collapses (unknown elements default to inline) */
 skeleton-screen { display: block; }
 
+/* Theme palettes \u2014 light (default), dark, or auto (follows the OS setting).
+   Explicit color options and data-skeleton-color always win over these. */
+.usk-theme-light {
+  --usk-color: #e5e7eb;
+  --usk-highlight: #f3f4f6;
+}
+.usk-theme-dark {
+  --usk-color: #27272a;
+  --usk-highlight: #3f3f46;
+}
+/* 'auto' mirrors the site's own color scheme with zero JavaScript */
+@media (prefers-color-scheme: dark) {
+  .usk-theme-auto {
+    --usk-color: #27272a;
+    --usk-highlight: #3f3f46;
+  }
+}
+
 /* Force a positioning context on the scanned root (only when static) */
 .usk-rel { position: relative !important; }
 
@@ -208,6 +226,8 @@ var SKIP_TAGS = /* @__PURE__ */ new Set([
 var MANUAL = /* @__PURE__ */ new Set(["circle", "rect", "text", "image", "none", "ignore", "auto"]);
 var EFFECTS = ["shimmer", "wave", "pulse", "fade", "blink", "sheen", "bounce", "none"];
 var EFFECT_SET = new Set(EFFECTS);
+var THEMES = ["light", "dark", "auto"];
+var THEME_SET = new Set(THEMES);
 function rectOf(el) {
   const r = el.getBoundingClientRect();
   return { left: r.left, top: r.top, width: r.width, height: r.height };
@@ -363,6 +383,7 @@ function walk(el, ctx) {
 function buildSkeleton(root, userOpts = {}) {
   const opts = {
     effect: "shimmer",
+    theme: "auto",
     color: null,
     highlightColor: null,
     duration: null,
@@ -379,7 +400,8 @@ function buildSkeleton(root, userOpts = {}) {
   const ownerDoc = root.ownerDocument || document;
   const overlay = ownerDoc.createElement("div");
   const effect = EFFECT_SET.has(opts.effect) ? opts.effect : "shimmer";
-  overlay.className = `usk-overlay usk-effect-${effect}`;
+  const theme = THEME_SET.has(opts.theme) ? opts.theme : "auto";
+  overlay.className = `usk-overlay usk-effect-${effect} usk-theme-${theme}`;
   overlay.setAttribute("aria-hidden", "true");
   if (opts.blockInteraction) overlay.classList.add("usk-blocking");
   if (opts.color) overlay.style.setProperty("--usk-color", opts.color);
@@ -450,6 +472,13 @@ function buildSkeleton(root, userOpts = {}) {
       overlay.classList.remove(...EFFECTS.map((name) => `usk-effect-${name}`));
       overlay.classList.add(`usk-effect-${e}`);
     },
+    /** Switch the color palette at runtime — 'light' | 'dark' | 'auto'. */
+    setTheme(next) {
+      if (destroyed) return;
+      const t = THEME_SET.has(next) ? next : "auto";
+      overlay.classList.remove(...THEMES.map((name) => `usk-theme-${name}`));
+      overlay.classList.add(`usk-theme-${t}`);
+    },
     /** Remove the skeleton and restore the real UI. Idempotent. */
     destroy() {
       if (destroyed) return;
@@ -493,7 +522,7 @@ var SkeletonLoader = class {
    *
    * @param {Element|string} target
    * @param {import('./scan.js').ScanOptions} [options]
-   * @returns {object} handle — { root, overlay, blocks, update(), setEffect(), destroy() }
+   * @returns {object} handle — { root, overlay, blocks, update(), setEffect(), setTheme(), destroy() }
    */
   static scan(target, options = {}) {
     const root = resolveTarget(target);
@@ -509,6 +538,7 @@ var SkeletonLoader = class {
       },
       update: () => built.update(),
       setEffect: (effect) => built.setEffect(effect),
+      setTheme: (theme) => built.setTheme(theme),
       destroy: () => {
         built.destroy();
         handles.delete(root);
@@ -565,7 +595,7 @@ var CustomElementBase = typeof HTMLElement !== "undefined" ? HTMLElement : class
 };
 var SkeletonScreen = class extends CustomElementBase {
   static get observedAttributes() {
-    return ["loading", "effect", "color", "highlight-color", "duration", "radius"];
+    return ["loading", "effect", "theme", "color", "highlight-color", "duration", "radius"];
   }
   connectedCallback() {
     const sync = () => {
@@ -598,6 +628,8 @@ var SkeletonScreen = class extends CustomElementBase {
     const opts = { ...options || {} };
     const effect = this.getAttribute("effect");
     if (effect) opts.effect = effect;
+    const theme = this.getAttribute("theme");
+    if (theme) opts.theme = theme;
     const color = this.getAttribute("color");
     if (color) opts.color = color;
     const highlight = this.getAttribute("highlight-color");
@@ -635,6 +667,7 @@ export {
   SKELETON_CSS,
   SkeletonLoader,
   SkeletonScreen,
+  THEMES,
   src_default as default,
   injectStyles,
   registerSkeletonScreen

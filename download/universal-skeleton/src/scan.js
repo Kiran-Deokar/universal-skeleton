@@ -39,6 +39,17 @@ export const EFFECTS = ['shimmer', 'wave', 'pulse', 'fade', 'blink', 'sheen', 'b
 
 const EFFECT_SET = new Set(EFFECTS);
 
+/**
+ * Color palettes for the skeleton blocks.
+ *   light — grey blocks for light UIs (the classic look)
+ *   dark  — dark blocks for dark UIs
+ *   auto  — follows the OS `prefers-color-scheme`, zero JavaScript
+ * Explicit color options always win over the palette.
+ */
+export const THEMES = ['light', 'dark', 'auto'];
+
+const THEME_SET = new Set(THEMES);
+
 function rectOf(el) {
   const r = el.getBoundingClientRect();
   return { left: r.left, top: r.top, width: r.width, height: r.height };
@@ -215,6 +226,7 @@ function walk(el, ctx) {
  * @param {Element} root
  * @param {object}  [userOpts]
  * @param {import('./scan.js').Effect} [userOpts.effect='shimmer']
+ * @param {'light'|'dark'|'auto'} [userOpts.theme='auto'] block color palette
  * @param {string}   [userOpts.color]          base grey (CSS color)
  * @param {string}   [userOpts.highlightColor] shimmer band color
  * @param {string|number} [userOpts.duration]  one animation cycle (CSS time like '2s', or ms number)
@@ -228,6 +240,7 @@ function walk(el, ctx) {
 export function buildSkeleton(root, userOpts = {}) {
   const opts = {
     effect: 'shimmer',
+    theme: 'auto',
     color: null,
     highlightColor: null,
     duration: null,
@@ -247,7 +260,8 @@ export function buildSkeleton(root, userOpts = {}) {
 
   const overlay = ownerDoc.createElement('div');
   const effect = EFFECT_SET.has(opts.effect) ? opts.effect : 'shimmer';
-  overlay.className = `usk-overlay usk-effect-${effect}`;
+  const theme = THEME_SET.has(opts.theme) ? opts.theme : 'auto';
+  overlay.className = `usk-overlay usk-effect-${effect} usk-theme-${theme}`;
   overlay.setAttribute('aria-hidden', 'true');
   if (opts.blockInteraction) overlay.classList.add('usk-blocking');
   if (opts.color) overlay.style.setProperty('--usk-color', opts.color);
@@ -317,6 +331,13 @@ export function buildSkeleton(root, userOpts = {}) {
       const e = EFFECT_SET.has(next) ? next : 'shimmer';
       overlay.classList.remove(...EFFECTS.map((name) => `usk-effect-${name}`));
       overlay.classList.add(`usk-effect-${e}`);
+    },
+    /** Switch the color palette at runtime — 'light' | 'dark' | 'auto'. */
+    setTheme(next) {
+      if (destroyed) return;
+      const t = THEME_SET.has(next) ? next : 'auto';
+      overlay.classList.remove(...THEMES.map((name) => `usk-theme-${name}`));
+      overlay.classList.add(`usk-theme-${t}`);
     },
     /** Remove the skeleton and restore the real UI. Idempotent. */
     destroy() {

@@ -29,8 +29,8 @@ function EffectChips({ value, onChange }: { value: SkeletonEffect; onChange: (e:
           onClick={() => onChange(e)}
           className={`rounded-lg border px-3 py-1.5 font-mono text-xs transition-colors ${
             value === e
-              ? 'border-emerald-500 bg-emerald-950 text-emerald-300'
-              : 'border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200'
+              ? 'border-emerald-600 bg-emerald-100 text-emerald-700 dark:border-emerald-500 dark:bg-emerald-950 dark:text-emerald-300'
+              : 'border-border bg-card text-muted-foreground hover:text-accent-foreground'
           }`}
         >
           {e}
@@ -44,8 +44,8 @@ function ControlRow({ label, hint, children }: { label: string; hint?: string; c
   return (
     <div>
       <div className="flex items-baseline justify-between">
-        <Label className="text-zinc-300">{label}</Label>
-        {hint ? <span className="font-mono text-xs text-emerald-300">{hint}</span> : null}
+        <Label className="text-foreground">{label}</Label>
+        {hint ? <span className="font-mono text-xs text-emerald-600 dark:text-emerald-300">{hint}</span> : null}
       </div>
       <div className="mt-2">{children}</div>
     </div>
@@ -68,13 +68,25 @@ export function Playground() {
   const [loadedAt, setLoadedAt] = useState<string | null>(null);
   // Render the Web Component only after hydration (see sample-card.tsx note)
   const mounted = useMounted();
+  // Demo surface color scheme — the skeleton theme follows it so you can see
+  // both palettes of the package (theme: 'light' | 'dark').
+  const [surface, setSurface] = useState<'light' | 'dark'>('light');
 
   const options = useMemo(
-    () => ({ effect, duration, radius, color, highlightColor: highlight, textLines, blockInteraction }),
-    [effect, duration, radius, color, highlight, textLines, blockInteraction]
+    () => ({
+      effect,
+      theme: surface,
+      duration,
+      radius,
+      color,
+      highlightColor: highlight,
+      textLines,
+      blockInteraction,
+    }),
+    [effect, surface, duration, radius, color, highlight, textLines, blockInteraction]
   );
 
-  const scanRef = useSkeleton(showSkeleton, () => options, [options, variant]);
+  const scanRef = useSkeleton(showSkeleton, () => options, [options, variant, surface]);
 
   /** Simulate a fetch: skeleton in → data → skeleton out (restore even on failure). */
   const simulate = () => {
@@ -93,6 +105,7 @@ export function Playground() {
 
   const scanSnippet = `SkeletonLoader.scan('#demo', {
   effect: '${effect}',
+  theme: '${surface}',
   duration: ${duration},
   color: '${color}',
   highlightColor: '${highlight}',
@@ -101,7 +114,7 @@ export function Playground() {
   blockInteraction: ${blockInteraction},
 });`;
 
-  const wcSnippet = `<skeleton-screen loading effect="${effect}" duration="${duration}"
+  const wcSnippet = `<skeleton-screen loading effect="${effect}" theme="${surface}" duration="${duration}"
   color="${color}" highlight-color="${highlight}" radius="${radius}">
   …your real markup…
 </skeleton-screen>`;
@@ -109,26 +122,26 @@ export function Playground() {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="text-3xl font-bold text-white">Playground</h1>
-        <p className="mt-2 max-w-3xl leading-7 text-zinc-400">
+        <h1 className="text-3xl font-bold text-foreground">Playground</h1>
+        <p className="mt-2 max-w-3xl leading-7 text-muted-foreground">
           Tune the controls and watch both APIs react live: the left card is driven by{' '}
-          <code className="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-sm text-emerald-300">scan()</code>,
-          the right one purely by Web Component attributes. The code below the demos always reflects
-          your current settings — copy it straight into your project.
+          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-sm text-emerald-700 dark:text-emerald-300">scan()</code>,
+          the right one purely by Web Component attributes. Flip the demo surface between light and
+          dark to see the skeleton palettes swap — the code below the demos always reflects your
+          current settings.
         </p>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_340px]">
         {/* Demo cards */}
         <div className="space-y-6">
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
+          <div className="rounded-2xl border border-border bg-card/50 p-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="font-medium text-white">1 · scan() — auto skeleton</h2>
+              <h2 className="font-medium text-foreground">1 · scan() — auto skeleton</h2>
               <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
                   variant="outline"
-                  className="border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-800 hover:text-white"
                   onClick={() => setShowSkeleton((s) => !s)}
                 >
                   {showSkeleton ? <RotateCcw className="mr-1.5 h-3.5 w-3.5" /> : <Play className="mr-1.5 h-3.5 w-3.5" />}
@@ -137,7 +150,6 @@ export function Playground() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-800 hover:text-white"
                   onClick={() => setVariant((v) => (((v + 1) % 3) as 0 | 1 | 2))}
                 >
                   <Dices className="mr-1.5 h-3.5 w-3.5" />
@@ -155,42 +167,72 @@ export function Playground() {
               </div>
             </div>
             <div ref={scanRef}>
-              <ProfileCard variant={variant} />
+              <ProfileCard variant={variant} surface={surface} />
             </div>
-            <p className="mt-3 text-xs text-zinc-500">
+            <p className="mt-3 text-xs text-muted-foreground">
               {loadedAt ? `Data refreshed at ${loadedAt}.` : 'The skeleton mirrors this exact card — randomize the content and it re-measures.'}
             </p>
           </div>
 
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
-            <h2 className="mb-4 font-medium text-white">2 · &lt;skeleton-screen&gt; — declarative</h2>
-            {/* key={variant} remounts the element so it re-scans fresh content;
-                mounted gates client-side-only rendering to keep hydration clean */}
+          <div className="rounded-2xl border border-border bg-card/50 p-5">
+            <h2 className="mb-4 font-medium text-foreground">2 · &lt;skeleton-screen&gt; — declarative</h2>
+            {/* key={variant + surface} remounts the element so it re-scans fresh
+                content; mounted gates client-side-only rendering for clean hydration */}
             {mounted ? (
               <skeleton-screen
-                key={variant}
+                key={`${variant}-${surface}`}
                 loading={showSkeleton ? '' : undefined}
                 effect={effect}
+                theme={surface}
                 duration={duration}
                 color={color}
                 highlight-color={highlight}
                 radius={radius}
               >
-                <ProfileCard variant={variant} />
+                <ProfileCard variant={variant} surface={surface} />
               </skeleton-screen>
             ) : (
-              <ProfileCard variant={variant} />
+              <ProfileCard variant={variant} surface={surface} />
             )}
-            <p className="mt-3 text-xs text-zinc-500">
+            <p className="mt-3 text-xs text-muted-foreground">
               Same controls, zero JavaScript: the attributes above are the only configuration.
             </p>
           </div>
         </div>
 
         {/* Controls */}
-        <aside className="space-y-5 self-start rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 xl:sticky xl:top-24">
+        <aside className="space-y-5 self-start rounded-2xl border border-border bg-card/50 p-5 xl:sticky xl:top-24">
           <ControlRow label="Effect">
             <EffectChips value={effect} onChange={setEffect} />
+          </ControlRow>
+
+          <ControlRow label="Demo surface (skeleton theme)">
+            <div className="flex gap-2">
+              {(['light', 'dark'] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => {
+                    setSurface(s);
+                    // Explicit colors win over the theme palette — so switching
+                    // surfaces resets the preset to a matching one.
+                    const [c, h] = PRESETS[s === 'dark' ? 'dark' : 'grey'];
+                    setColorKey(s === 'dark' ? 'dark' : 'grey');
+                    setColor(c);
+                    setHighlight(h);
+                  }}
+                  className={`rounded-lg border px-3 py-1.5 font-mono text-xs transition-colors ${
+                    surface === s
+                      ? 'border-emerald-600 bg-emerald-100 text-emerald-700 dark:border-emerald-500 dark:bg-emerald-950 dark:text-emerald-300'
+                      : 'border-border bg-card text-muted-foreground hover:text-accent-foreground'
+                  }`}
+                >
+                  {s === 'light' ? 'light — theme: "light"' : 'dark — theme: "dark"'}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Resets the color preset to match — an explicit color always wins over the theme palette.
+            </p>
           </ControlRow>
 
           <ControlRow label="Duration" hint={`${duration}ms`}>
@@ -212,7 +254,9 @@ export function Playground() {
                     setHighlight(h);
                   }}
                   className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs transition-colors ${
-                    colorKey === key ? 'border-emerald-500 text-emerald-300' : 'border-zinc-700 text-zinc-400 hover:text-zinc-200'
+                    colorKey === key
+                      ? 'border-emerald-600 text-emerald-700 dark:border-emerald-500 dark:text-emerald-300'
+                      : 'border-border text-muted-foreground hover:text-accent-foreground'
                   }`}
                 >
                   <span className="h-3 w-3 rounded-full" style={{ background: c }} />
@@ -224,35 +268,35 @@ export function Playground() {
 
           <ControlRow label="Custom colors">
             <div className="flex gap-3">
-              <label className="flex items-center gap-2 text-xs text-zinc-400">
+              <label className="flex items-center gap-2 text-xs text-muted-foreground">
                 base
                 <input
                   type="color"
                   aria-label="Base color"
                   value={color}
                   onChange={(e) => { setColor(e.target.value); setColorKey('custom'); }}
-                  className="h-7 w-9 cursor-pointer rounded border border-zinc-700 bg-transparent"
+                  className="h-7 w-9 cursor-pointer rounded border border-border bg-transparent"
                 />
               </label>
-              <label className="flex items-center gap-2 text-xs text-zinc-400">
+              <label className="flex items-center gap-2 text-xs text-muted-foreground">
                 highlight
                 <input
                   type="color"
                   aria-label="Highlight color"
                   value={highlight}
                   onChange={(e) => { setHighlight(e.target.value); setColorKey('custom'); }}
-                  className="h-7 w-9 cursor-pointer rounded border border-zinc-700 bg-transparent"
+                  className="h-7 w-9 cursor-pointer rounded border border-border bg-transparent"
                 />
               </label>
             </div>
           </ControlRow>
 
           <div className="flex items-center justify-between">
-            <Label className="text-zinc-300">textLines</Label>
+            <Label className="text-foreground">textLines</Label>
             <Switch checked={textLines} onCheckedChange={setTextLines} />
           </div>
           <div className="flex items-center justify-between">
-            <Label className="text-zinc-300">blockInteraction</Label>
+            <Label className="text-foreground">blockInteraction</Label>
             <Switch checked={blockInteraction} onCheckedChange={setBlockInteraction} />
           </div>
 

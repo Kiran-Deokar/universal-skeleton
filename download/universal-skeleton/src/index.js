@@ -14,7 +14,7 @@
 import { injectStyles, SKELETON_CSS } from './styles.js';
 import { SkeletonLoader } from './skeleton-loader.js';
 import { SkeletonScreen, registerSkeletonScreen } from './web-component.js';
-import { EFFECTS } from './scan.js';
+import { EFFECTS, THEMES } from './scan.js';
 
 // Auto-inject styles + auto-register the Web Component in the browser.
 // (In Node — e.g. during SSR or tests — both calls are safely skipped.)
@@ -30,6 +30,7 @@ export {
   injectStyles,
   SKELETON_CSS,
   EFFECTS,
+  THEMES,
 };
 
 export default SkeletonLoader;

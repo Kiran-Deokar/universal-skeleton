@@ -5,12 +5,12 @@ import { CodeBlock } from './code-block';
 
 function ApiTable({ rows, headers }: { headers: string[]; rows: ReactNode[][] }) {
   return (
-    <div className="mt-4 overflow-x-auto rounded-xl border border-zinc-800">
+    <div className="mt-4 overflow-x-auto rounded-xl border border-border">
       <table className="w-full border-collapse text-sm">
         <thead>
-          <tr className="bg-zinc-900/80">
+          <tr className="bg-muted/50">
             {headers.map((h) => (
-              <th key={h} className="border-b border-zinc-800 px-4 py-2.5 text-left font-medium text-zinc-300">
+              <th key={h} className="border-b border-border px-4 py-2.5 text-left font-medium text-foreground">
                 {h}
               </th>
             ))}
@@ -18,9 +18,9 @@ function ApiTable({ rows, headers }: { headers: string[]; rows: ReactNode[][] })
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i} className="odd:bg-zinc-900/30">
+            <tr key={i} className="odd:bg-muted/30">
               {row.map((cell, j) => (
-                <td key={j} className="border-b border-zinc-800/60 px-4 py-2.5 align-top text-zinc-400 [&_code]:font-mono [&_code]:text-emerald-300">
+                <td key={j} className="border-b border-border/60 px-4 py-2.5 align-top text-muted-foreground [&_code]:font-mono [&_code]:text-emerald-700 dark:[&_code]:text-emerald-300">
                   {cell}
                 </td>
               ))}
@@ -34,7 +34,7 @@ function ApiTable({ rows, headers }: { headers: string[]; rows: ReactNode[][] })
 
 function H2({ children, id }: { children: ReactNode; id?: string }) {
   return (
-    <h2 id={id} className="mt-12 text-xl font-semibold text-white first:mt-0">
+    <h2 id={id} className="mt-12 text-xl font-semibold text-foreground first:mt-0">
       {children}
     </h2>
   );
@@ -43,10 +43,10 @@ function H2({ children, id }: { children: ReactNode; id?: string }) {
 export function ApiReference() {
   return (
     <div className="max-w-4xl space-y-2">
-      <h1 className="text-3xl font-bold text-white">API reference</h1>
-      <p className="mt-2 leading-7 text-zinc-400">
-        Everything below is exported from <code className="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-sm text-emerald-300">universal-skeleton</code> —
-        and from the global <code className="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-sm text-emerald-300">UniversalSkeleton</code> object on the CDN build.
+      <h1 className="text-3xl font-bold text-foreground">API reference</h1>
+      <p className="mt-2 leading-7 text-muted-foreground">
+        Everything below is exported from <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-sm text-emerald-700 dark:text-emerald-300">universal-skeleton</code> —
+        and from the global <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-sm text-emerald-700 dark:text-emerald-300">UniversalSkeleton</code> object on the CDN build.
       </p>
 
       <H2>SkeletonLoader</H2>
@@ -84,6 +84,7 @@ const data = await SkeletonLoader.while(
           [<code key="c">handle.blocks</code>, 'Number of skeleton blocks currently painted.'],
           [<code key="d">handle.update()</code>, 'Re-measure the real UI and rebuild every block (called automatically on resize).'],
           [<code key="e">handle.setEffect(effect)</code>, 'Swap the animation at runtime — one of the 8 effect names, without re-measuring.'],
+          [<code key="g">handle.setTheme(theme)</code>, "Swap the color palette at runtime — 'light', 'dark' or 'auto'."],
           [<code key="f">handle.destroy()</code>, 'Remove the skeleton and restore the real UI. Idempotent.'],
         ]}
       />
@@ -93,6 +94,7 @@ const data = await SkeletonLoader.while(
         headers={['Option', 'Type', 'Default', 'Description']}
         rows={[
           [<code key="1">effect</code>, "'shimmer' | 'wave' | 'pulse' | 'fade' | 'blink' | 'sheen' | 'bounce' | 'none'", "'shimmer'", 'Animation style'],
+          [<code key="11">theme</code>, "'light' | 'dark' | 'auto'", "'auto'", "Block color palette — 'auto' follows prefers-color-scheme"],
           [<code key="2">color</code>, 'string', "'#e5e7eb'", 'Base grey of every block (any CSS color)'],
           [<code key="3">highlightColor</code>, 'string', "'#f3f4f6'", 'Bright band of shimmer / wave / sheen'],
           [<code key="4">duration</code>, 'string | number', "'1.4s'", 'One animation cycle — CSS time (\u20182s\u2019) or milliseconds (900)'],
@@ -123,6 +125,7 @@ const data = await SkeletonLoader.while(
         rows={[
           [<code key="a">loading</code>, 'present / "", "true", "1", "on"', 'Show the skeleton; remove the attribute (or "false") to reveal the UI'],
           [<code key="b">effect</code>, 'the 8 effect names', 'Animation style (default shimmer)'],
+          [<code key="g">theme</code>, 'light | dark | auto', 'Block color palette (default auto — follows the OS setting)'],
           [<code key="c">color</code>, 'CSS color', 'Base block color'],
           [<code key="d">highlight-color</code>, 'CSS color', 'Bright band color'],
           [<code key="e">duration</code>, '"2s" or "900"', 'One animation cycle'],
@@ -146,8 +149,8 @@ registerSkeletonScreen('my-skeleton');            // <my-skeleton loading>`}
       <ApiTable
         headers={['Variable', 'Default', 'Description']}
         rows={[
-          [<code key="a">--usk-color</code>, '#e5e7eb', 'Base grey of every skeleton block'],
-          [<code key="b">--usk-highlight</code>, '#f3f4f6', 'Bright band of shimmer / wave / sheen'],
+          [<code key="a">--usk-color</code>, '#e5e7eb', 'Base grey of every skeleton block — the theme palettes set this to #27272a on dark surfaces'],
+          [<code key="b">--usk-highlight</code>, '#f3f4f6', 'Bright band of shimmer / wave / sheen — dark palette uses #3f3f46'],
           [<code key="c">--usk-radius</code>, '8px', 'Corner radius of rectangular blocks'],
           [<code key="d">--usk-duration</code>, '1.4s', 'One animation cycle — also settable via the duration option'],
         ]}
@@ -165,24 +168,24 @@ registerSkeletonScreen('my-skeleton');            // <my-skeleton loading>`}
       />
 
       <H2>Accessibility</H2>
-      <div className="mt-4 space-y-3 text-sm leading-7 text-zinc-400">
+      <div className="mt-4 space-y-3 text-sm leading-7 text-muted-foreground">
         <p>
-          The scanned region gets <code className="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-xs text-emerald-300">aria-busy=&quot;true&quot;</code> while
-          the skeleton is visible, and the overlay itself is <code className="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-xs text-emerald-300">aria-hidden</code>,
+          The scanned region gets <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-emerald-700 dark:text-emerald-300">aria-busy=&quot;true&quot;</code> while
+          the skeleton is visible, and the overlay itself is <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-emerald-700 dark:text-emerald-300">aria-hidden</code>,
           so screen readers announce the loading state without reading the placeholders.
         </p>
         <p>
-          <code className="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-xs text-emerald-300">blockInteraction</code> swallows clicks on the invisible
+          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-emerald-700 dark:text-emerald-300">blockInteraction</code> swallows clicks on the invisible
           UI underneath (with a progress cursor) — no more clicking a button you cannot see.
         </p>
         <p>
-          Every effect ships with a <code className="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-xs text-emerald-300">prefers-reduced-motion</code> override:
+          Every effect ships with a <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-emerald-700 dark:text-emerald-300">prefers-reduced-motion</code> override:
           motion-sensitive users get static blocks automatically.
         </p>
       </div>
 
       <H2>Browser support</H2>
-      <p className="mt-2 text-sm leading-7 text-zinc-400">
+      <p className="mt-2 text-sm leading-7 text-muted-foreground">
         Every modern browser (Chrome, Edge, Firefox, Safari — desktop and iOS/Android). Requires
         Custom Elements v1, ResizeObserver and CSS custom properties — baseline features since
         2020. No polyfills needed for current browsers.

@@ -12,6 +12,7 @@ import {
   injectStyles,
   SKELETON_CSS,
   EFFECTS,
+  THEMES,
 } from '../src/index.js';
 
 /** Override getBoundingClientRect on an element to simulate real geometry. */
@@ -193,6 +194,59 @@ describe('effects', () => {
     const h2 = SkeletonLoader.scan('#host', { duration: '2s' });
     expect(h2.overlay.style.getPropertyValue('--usk-duration')).toBe('2s');
     h2.destroy();
+  });
+});
+
+describe('themes', () => {
+  it('defaults to the auto palette', () => {
+    setupFeed();
+    const handle = SkeletonLoader.scan('#host');
+    expect(handle.overlay.className).toContain('usk-theme-auto');
+    handle.destroy();
+  });
+
+  it('supports light, dark and auto via the theme option', () => {
+    setupFeed();
+    for (const theme of THEMES) {
+      const handle = SkeletonLoader.scan('#host', { theme });
+      expect(handle.overlay.className).toContain(`usk-theme-${theme}`);
+      handle.destroy();
+    }
+  });
+
+  it('falls back to auto for unknown theme names', () => {
+    setupFeed();
+    const handle = SkeletonLoader.scan('#host', { theme: 'sepia' });
+    expect(handle.overlay.className).toContain('usk-theme-auto');
+    handle.destroy();
+  });
+
+  it('setTheme() switches palettes at runtime', () => {
+    setupFeed();
+    const handle = SkeletonLoader.scan('#host');
+    handle.setTheme('dark');
+    expect(handle.overlay.className).toContain('usk-theme-dark');
+    handle.setTheme('light');
+    expect(handle.overlay.className).toContain('usk-theme-light');
+    expect(handle.overlay.className).not.toContain('usk-theme-dark');
+    handle.setTheme('bogus');
+    expect(handle.overlay.className).toContain('usk-theme-auto');
+    handle.destroy();
+  });
+
+  it('explicit color options win over the theme palette', () => {
+    setupFeed();
+    const handle = SkeletonLoader.scan('#host', { theme: 'dark', color: '#ff0000' });
+    expect(handle.overlay.className).toContain('usk-theme-dark');
+    expect(handle.overlay.style.getPropertyValue('--usk-color')).toBe('#ff0000');
+    handle.destroy();
+  });
+
+  it('exports CSS rules for both palettes + the prefers-color-scheme query', () => {
+    expect(SKELETON_CSS).toContain('usk-theme-light');
+    expect(SKELETON_CSS).toContain('usk-theme-dark');
+    expect(SKELETON_CSS).toContain('usk-theme-auto');
+    expect(SKELETON_CSS).toContain('prefers-color-scheme: dark');
   });
 });
 
@@ -410,6 +464,23 @@ describe('<skeleton-screen> web component', () => {
     ce.removeAttribute('loading');
     await tick();
     expect(ce.querySelector('.usk-overlay')).toBeNull();
+  });
+
+  it('the theme attribute controls the block palette', async () => {
+    registerSkeletonScreen('x-skeleton-theme');
+    host.innerHTML = '<x-skeleton-theme loading theme="dark"><p>content</p></x-skeleton-theme>';
+    const ce = host.querySelector('x-skeleton-theme');
+    mockRect(ce, 0, 0, 300, 100);
+    await tick();
+
+    const overlay = ce.querySelector('.usk-overlay');
+    expect(overlay).toBeTruthy();
+    expect(overlay.className).toContain('usk-theme-dark');
+
+    // switching the attribute re-syncs the palette
+    ce.setAttribute('theme', 'light');
+    await tick();
+    expect(ce.querySelector('.usk-overlay').className).toContain('usk-theme-light');
   });
 
   it('does not double-register the tag name', () => {

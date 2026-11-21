@@ -79,6 +79,8 @@ const VARIANTS = [
 export interface ProfileCardProps {
   /** Changing the variant re-renders content with different text lengths. */
   variant?: 0 | 1 | 2;
+  /** Color scheme of the demo surface — pass the same value as the skeleton theme. */
+  surface?: 'light' | 'dark';
   className?: string;
 }
 
@@ -86,11 +88,14 @@ export interface ProfileCardProps {
  * The demo UI that every live example skeletonizes — a small social profile
  * card with banner, avatar, text, buttons and a stats row.
  */
-export function ProfileCard({ variant = 0, className = '' }: ProfileCardProps) {
+export function ProfileCard({ variant = 0, surface = 'light', className = '' }: ProfileCardProps) {
   const v = VARIANTS[variant];
+  const dark = surface === 'dark';
   return (
     <div
-      className={`overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm ${className}`}
+      className={`overflow-hidden rounded-2xl border shadow-sm ${
+        dark ? 'border-zinc-700 bg-zinc-900' : 'border-zinc-200 bg-white'
+      } ${className}`}
     >
       <img
         src={BANNER_SVG}
@@ -103,7 +108,9 @@ export function ProfileCard({ variant = 0, className = '' }: ProfileCardProps) {
           <img
             src={AVATAR_SVG}
             alt="Avatar"
-            className="-mt-8 h-16 w-16 rounded-full border-4 border-white object-cover"
+            className={`-mt-8 h-16 w-16 rounded-full border-4 object-cover ${
+              dark ? 'border-zinc-900' : 'border-white'
+            }`}
             draggable={false}
           />
           <div className="mt-3 flex gap-2">
@@ -115,18 +122,20 @@ export function ProfileCard({ variant = 0, className = '' }: ProfileCardProps) {
             </button>
             <button
               type="button"
-              className="rounded-lg border border-zinc-300 px-3.5 py-1.5 text-sm font-medium text-zinc-700"
+              className={`rounded-lg border px-3.5 py-1.5 text-sm font-medium ${
+                dark ? 'border-zinc-600 text-zinc-200' : 'border-zinc-300 text-zinc-700'
+              }`}
             >
               Message
             </button>
           </div>
         </div>
-        <h3 className="mt-3 text-lg font-semibold text-zinc-900">{v.name}</h3>
-        <p className="text-sm text-zinc-500">{v.handle}</p>
-        <p className="mt-2 text-sm leading-6 text-zinc-600">{v.bio}</p>
-        <div className="mt-4 flex gap-5 border-t border-zinc-100 pt-3">
+        <h3 className={`mt-3 text-lg font-semibold ${dark ? 'text-zinc-50' : 'text-zinc-900'}`}>{v.name}</h3>
+        <p className={`text-sm ${dark ? 'text-zinc-400' : 'text-zinc-500'}`}>{v.handle}</p>
+        <p className={`mt-2 text-sm leading-6 ${dark ? 'text-zinc-300' : 'text-zinc-600'}`}>{v.bio}</p>
+        <div className={`mt-4 flex gap-5 border-t pt-3 ${dark ? 'border-zinc-700/60' : 'border-zinc-100'}`}>
           {v.stats.map((s) => (
-            <span key={s} className="text-xs font-medium text-zinc-500">
+            <span key={s} className={`text-xs font-medium ${dark ? 'text-zinc-400' : 'text-zinc-500'}`}>
               {s}
             </span>
           ))}

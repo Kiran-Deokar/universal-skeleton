@@ -15,6 +15,7 @@
  *   loading         present (or "true"/"1"/"on"/"loading") → show skeleton
  *   effect          shimmer | wave | pulse | fade | blink | sheen | bounce | none
  *                   (default shimmer)
+ *   theme           light | dark | auto          (default auto — follows the OS)
  *   color           base grey, any CSS color
  *   highlight-color shimmer/wave band color
  *   duration        one animation cycle, e.g. "2s" or "800" (ms)
@@ -32,7 +33,7 @@ const CustomElementBase = typeof HTMLElement !== 'undefined' ? HTMLElement : cla
 
 class SkeletonScreen extends CustomElementBase {
   static get observedAttributes() {
-    return ['loading', 'effect', 'color', 'highlight-color', 'duration', 'radius'];
+    return ['loading', 'effect', 'theme', 'color', 'highlight-color', 'duration', 'radius'];
   }
 
   connectedCallback() {
@@ -72,6 +73,8 @@ class SkeletonScreen extends CustomElementBase {
     const opts = { ...(options || {}) };
     const effect = this.getAttribute('effect');
     if (effect) opts.effect = effect;
+    const theme = this.getAttribute('theme');
+    if (theme) opts.theme = theme;
     const color = this.getAttribute('color');
     if (color) opts.color = color;
     const highlight = this.getAttribute('highlight-color');

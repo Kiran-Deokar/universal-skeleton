@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 - **5 new effects** — the library now ships 8 animation styles: `shimmer`, `wave` (diagonal light sweep), `pulse`, `fade` (staggered breathing cascade), `blink` (hard terminal-cursor blink), `sheen` (one glossy band sweeping the whole skeleton), `bounce` (gentle vertical bob) and `none`.
+- **Theme support** — new `theme` option / `<skeleton-screen theme>` attribute with `light`, `dark` and `auto` palettes (default `auto`, follows `prefers-color-scheme` with zero JavaScript). Includes `handle.setTheme()` for runtime switching; explicit `color` options always win.
 - **`duration` option** on `SkeletonLoader.scan()` / `.while()` — one animation cycle as a CSS time (`'2s'`) or milliseconds (`900`).
 - **`duration` attribute** on `<skeleton-screen>`.
 - `EFFECTS` export — the list of every supported effect name (for building pickers).

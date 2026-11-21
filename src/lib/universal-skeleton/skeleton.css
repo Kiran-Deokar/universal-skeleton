@@ -9,6 +9,24 @@
    positioned overlay inside it collapses (unknown elements default to inline) */
 skeleton-screen { display: block; }
 
+/* Theme palettes — light (default), dark, or auto (follows the OS setting).
+   Explicit color options and data-skeleton-color always win over these. */
+.usk-theme-light {
+  --usk-color: #e5e7eb;
+  --usk-highlight: #f3f4f6;
+}
+.usk-theme-dark {
+  --usk-color: #27272a;
+  --usk-highlight: #3f3f46;
+}
+/* 'auto' mirrors the site's own color scheme with zero JavaScript */
+@media (prefers-color-scheme: dark) {
+  .usk-theme-auto {
+    --usk-color: #27272a;
+    --usk-highlight: #3f3f46;
+  }
+}
+
 /* Force a positioning context on the scanned root (only when static) */
 .usk-rel { position: relative !important; }
 

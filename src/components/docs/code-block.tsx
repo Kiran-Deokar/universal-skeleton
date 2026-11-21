@@ -86,13 +86,13 @@ export function CodeBlock({
 
   if (bare) {
     return (
-      <div className={`relative group ${className}`}>
+      <div className={`relative group rounded-xl border border-zinc-800 bg-zinc-950 ${className}`}>
         <SyntaxHighlighter
           language={lang}
           style={vscDarkPlus}
           customStyle={{
             margin: 0,
-            padding: '1rem 1.25rem',
+            padding: '0.9rem 1.25rem',
             background: 'transparent',
             fontSize: '0.8125rem',
             lineHeight: 1.65,

@@ -14,8 +14,11 @@ declare module '@/lib/universal-skeleton/index.esm.mjs' {
     | 'bounce'
     | 'none';
 
+  export type SkeletonTheme = 'light' | 'dark' | 'auto';
+
   export interface SkeletonOptions {
     effect?: SkeletonEffect;
+    theme?: SkeletonTheme;
     color?: string;
     highlightColor?: string;
     duration?: string | number;
@@ -33,6 +36,7 @@ declare module '@/lib/universal-skeleton/index.esm.mjs' {
     readonly blocks: number;
     update(): void;
     setEffect(effect: SkeletonEffect): void;
+    setTheme(theme: SkeletonTheme): void;
     destroy(): void;
   }
 
@@ -56,6 +60,7 @@ declare module '@/lib/universal-skeleton/index.esm.mjs' {
   export declare function injectStyles(): boolean;
   export declare const SKELETON_CSS: string;
   export declare const EFFECTS: SkeletonEffect[];
+  export declare const THEMES: SkeletonTheme[];
   export default SkeletonLoader;
 }
 
@@ -69,6 +74,7 @@ type SkeletonScreenAttributes = DetailedHTMLProps<
   HTMLAttributes<HTMLElement> & {
     loading?: boolean | string;
     effect?: string;
+    theme?: string;
     color?: string;
     'highlight-color'?: string;
     duration?: string | number;
