@@ -11,6 +11,7 @@ import {
   registerSkeletonScreen,
   injectStyles,
   SKELETON_CSS,
+  EFFECTS,
 } from '../src/index.js';
 
 /** Override getBoundingClientRect on an element to simulate real geometry. */
@@ -59,6 +60,18 @@ describe('styles', () => {
     expect(SKELETON_CSS).toContain('usk-shimmer');
     expect(SKELETON_CSS).toContain('usk-pulse');
     expect(SKELETON_CSS).toContain('prefers-reduced-motion');
+  });
+
+  it('exports the CSS source with every new effect keyframe', () => {
+    expect(SKELETON_CSS).toContain('usk-wave');
+    expect(SKELETON_CSS).toContain('usk-fade');
+    expect(SKELETON_CSS).toContain('usk-blink');
+    expect(SKELETON_CSS).toContain('usk-bounce');
+    expect(SKELETON_CSS).toContain('.usk-effect-sheen::after');
+    // 'none' deliberately has no CSS rule — it disables the animation.
+    for (const effect of EFFECTS.filter((e) => e !== 'none')) {
+      expect(SKELETON_CSS).toContain(`usk-effect-${effect}`);
+    }
   });
 });
 
@@ -132,6 +145,54 @@ describe('SkeletonLoader.scan()', () => {
   it('throws a helpful error for invalid targets', () => {
     expect(() => SkeletonLoader.scan(42)).toThrow(TypeError);
     expect(() => SkeletonLoader.scan(null)).toThrow(TypeError);
+  });
+});
+
+describe('effects', () => {
+  it('supports all eight effects via the effect option', () => {
+    setupFeed();
+    for (const effect of EFFECTS) {
+      const handle = SkeletonLoader.scan('#host', { effect });
+      expect(handle.overlay.className).toContain(`usk-effect-${effect}`);
+      handle.destroy();
+    }
+  });
+
+  it('falls back to shimmer for unknown effect names', () => {
+    setupFeed();
+    const handle = SkeletonLoader.scan('#host', { effect: 'nope' });
+    expect(handle.overlay.className).toContain('usk-effect-shimmer');
+    handle.destroy();
+  });
+
+  it('setEffect() switches animations at runtime, including new ones', () => {
+    setupFeed();
+    const handle = SkeletonLoader.scan('#host');
+    for (const effect of ['wave', 'fade', 'blink', 'sheen', 'bounce', 'shimmer']) {
+      handle.setEffect(effect);
+      expect(handle.overlay.className).toContain(`usk-effect-${effect}`);
+      expect(handle.overlay.className).not.toContain('usk-effect-pulse');
+    }
+    handle.destroy();
+  });
+
+  it('setEffect() falls back to shimmer for unknown values', () => {
+    setupFeed();
+    const handle = SkeletonLoader.scan('#host', { effect: 'pulse' });
+    handle.setEffect('bogus');
+    expect(handle.overlay.className).toContain('usk-effect-shimmer');
+    handle.destroy();
+  });
+
+  it('duration option sets the --usk-duration variable (ms number or CSS time)', () => {
+    setupFeed();
+    const handle = SkeletonLoader.scan('#host', { duration: 900 });
+    expect(handle.overlay.style.getPropertyValue('--usk-duration')).toBe('900ms');
+    handle.destroy();
+
+    const h2 = SkeletonLoader.scan('#host', { duration: '2s' });
+    expect(h2.overlay.style.getPropertyValue('--usk-duration')).toBe('2s');
+    h2.destroy();
   });
 });
 

@@ -6,15 +6,28 @@
  * with zero extra setup (no @types package needed).
  */
 
-export type SkeletonEffect = 'shimmer' | 'pulse' | 'none';
+export type SkeletonEffect =
+  | 'shimmer'
+  | 'wave'
+  | 'pulse'
+  | 'fade'
+  | 'blink'
+  | 'sheen'
+  | 'bounce'
+  | 'none';
+
+/** Every animation effect the engine knows, in display order. */
+export declare const EFFECTS: SkeletonEffect[];
 
 export interface SkeletonOptions {
   /** Animation style. Default: 'shimmer'. */
   effect?: SkeletonEffect;
   /** Base grey of every skeleton block (any CSS color). */
   color?: string;
-  /** Bright band color of the shimmer wave. */
+  /** Bright band color of shimmer / wave / sheen effects. */
   highlightColor?: string;
+  /** One animation cycle — CSS time like '2s' or milliseconds as a number. */
+  duration?: string | number;
   /** Corner radius in px for rectangular blocks (text bars are always pill-shaped). */
   radius?: number | null;
   /** CSS selector or predicate function — matching elements are skipped. */
@@ -36,7 +49,7 @@ export interface SkeletonHandle {
   readonly blocks: number;
   /** Re-measure the real UI and rebuild every block. */
   update(): void;
-  /** Switch the animation at runtime: 'shimmer' | 'pulse' | 'none'. */
+  /** Switch the animation at runtime — any SkeletonEffect value. */
   setEffect(effect: SkeletonEffect): void;
   /** Remove the skeleton and restore the real UI. Idempotent. */
   destroy(): void;
@@ -96,6 +109,7 @@ export interface SkeletonScreenAttributes {
   effect?: SkeletonEffect;
   color?: string;
   'highlight-color'?: string;
+  duration?: string | number;
   radius?: number | string;
   [key: string]: unknown;
 }

@@ -13,9 +13,11 @@
  *
  * Attributes
  *   loading         present (or "true"/"1"/"on"/"loading") → show skeleton
- *   effect          shimmer | pulse | none          (default shimmer)
+ *   effect          shimmer | wave | pulse | fade | blink | sheen | bounce | none
+ *                   (default shimmer)
  *   color           base grey, any CSS color
- *   highlight-color shimmer band color
+ *   highlight-color shimmer/wave band color
+ *   duration        one animation cycle, e.g. "2s" or "800" (ms)
  *   radius          corner radius in px for rect blocks
  */
 
@@ -30,7 +32,7 @@ const CustomElementBase = typeof HTMLElement !== 'undefined' ? HTMLElement : cla
 
 class SkeletonScreen extends CustomElementBase {
   static get observedAttributes() {
-    return ['loading', 'effect', 'color', 'highlight-color', 'radius'];
+    return ['loading', 'effect', 'color', 'highlight-color', 'duration', 'radius'];
   }
 
   connectedCallback() {
@@ -74,6 +76,8 @@ class SkeletonScreen extends CustomElementBase {
     if (color) opts.color = color;
     const highlight = this.getAttribute('highlight-color');
     if (highlight) opts.highlightColor = highlight;
+    const duration = this.getAttribute('duration');
+    if (duration) opts.duration = duration;
     const radius = parseFloat(this.getAttribute('radius'));
     if (Number.isFinite(radius)) opts.radius = radius;
     this._handle = SkeletonLoader.scan(this, opts);

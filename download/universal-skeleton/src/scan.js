@@ -31,6 +31,14 @@ const SKIP_TAGS = new Set([
 /** Allowed values of the data-skeleton attribute. */
 const MANUAL = new Set(['circle', 'rect', 'text', 'image', 'none', 'ignore', 'auto']);
 
+/**
+ * Every animation effect the engine knows, in display order.
+ * Unknown values always fall back to 'shimmer'.
+ */
+export const EFFECTS = ['shimmer', 'wave', 'pulse', 'fade', 'blink', 'sheen', 'bounce', 'none'];
+
+const EFFECT_SET = new Set(EFFECTS);
+
 function rectOf(el) {
   const r = el.getBoundingClientRect();
   return { left: r.left, top: r.top, width: r.width, height: r.height };
@@ -206,9 +214,10 @@ function walk(el, ctx) {
  *
  * @param {Element} root
  * @param {object}  [userOpts]
- * @param {'shimmer'|'pulse'|'none'} [userOpts.effect='shimmer']
+ * @param {import('./scan.js').Effect} [userOpts.effect='shimmer']
  * @param {string}   [userOpts.color]          base grey (CSS color)
  * @param {string}   [userOpts.highlightColor] shimmer band color
+ * @param {string|number} [userOpts.duration]  one animation cycle (CSS time like '2s', or ms number)
  * @param {number}   [userOpts.radius]         corner radius (px) for rect blocks
  * @param {string|((el: Element) => boolean)} [userOpts.exclude] selector or predicate to skip
  * @param {boolean}  [userOpts.textLines=true] one bar per estimated text line
@@ -221,6 +230,7 @@ export function buildSkeleton(root, userOpts = {}) {
     effect: 'shimmer',
     color: null,
     highlightColor: null,
+    duration: null,
     radius: null,
     exclude: null,
     textLines: true,
@@ -236,12 +246,16 @@ export function buildSkeleton(root, userOpts = {}) {
   const ownerDoc = root.ownerDocument || document;
 
   const overlay = ownerDoc.createElement('div');
-  const effect = ['shimmer', 'pulse', 'none'].includes(opts.effect) ? opts.effect : 'shimmer';
+  const effect = EFFECT_SET.has(opts.effect) ? opts.effect : 'shimmer';
   overlay.className = `usk-overlay usk-effect-${effect}`;
   overlay.setAttribute('aria-hidden', 'true');
   if (opts.blockInteraction) overlay.classList.add('usk-blocking');
   if (opts.color) overlay.style.setProperty('--usk-color', opts.color);
   if (opts.highlightColor) overlay.style.setProperty('--usk-highlight', opts.highlightColor);
+  if (opts.duration) {
+    const ms = Number(opts.duration);
+    overlay.style.setProperty('--usk-duration', Number.isFinite(ms) ? `${ms}ms` : String(opts.duration));
+  }
 
   // Give the overlay a positioning context only when needed.
   const rootCS = computedStyle(root);
@@ -297,11 +311,11 @@ export function buildSkeleton(root, userOpts = {}) {
     update() {
       if (!destroyed) rebuild();
     },
-    /** Switch the animation at runtime: 'shimmer' | 'pulse' | 'none'. */
+    /** Switch the animation at runtime — any name from EFFECTS. */
     setEffect(next) {
       if (destroyed) return;
-      const e = ['shimmer', 'pulse', 'none'].includes(next) ? next : 'shimmer';
-      overlay.classList.remove('usk-effect-shimmer', 'usk-effect-pulse', 'usk-effect-none');
+      const e = EFFECT_SET.has(next) ? next : 'shimmer';
+      overlay.classList.remove(...EFFECTS.map((name) => `usk-effect-${name}`));
       overlay.classList.add(`usk-effect-${e}`);
     },
     /** Remove the skeleton and restore the real UI. Idempotent. */

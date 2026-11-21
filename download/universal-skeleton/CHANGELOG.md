@@ -3,6 +3,15 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.1.0] - 2026-11-21
+
+### Added
+- **5 new effects** — the library now ships 8 animation styles: `shimmer`, `wave` (diagonal light sweep), `pulse`, `fade` (staggered breathing cascade), `blink` (hard terminal-cursor blink), `sheen` (one glossy band sweeping the whole skeleton), `bounce` (gentle vertical bob) and `none`.
+- **`duration` option** on `SkeletonLoader.scan()` / `.while()` — one animation cycle as a CSS time (`'2s'`) or milliseconds (`900`).
+- **`duration` attribute** on `<skeleton-screen>`.
+- `EFFECTS` export — the list of every supported effect name (for building pickers).
+- New public documentation site with landing page, per-framework guides, API reference and a live playground.
+
 ## [1.0.0] - 2026-11-21
 
 ### Added

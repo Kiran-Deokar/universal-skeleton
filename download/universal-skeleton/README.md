@@ -41,7 +41,7 @@ Works everywhere. **One package, any language, any framework:**
 - [Manual mode — data attributes](#manual-mode--data-attributes)
 - [Web Component `<skeleton-screen>`](#web-component-skeleton-screen)
 - [Framework guides](#framework-guides)
-- [Effects: shimmer, pulse, none](#effects-shimmer-pulse-none)
+- [Effects: 8 animation styles](#effects-8-animation-styles)
 - [Theming](#theming)
 - [Accessibility](#accessibility)
 - [TypeScript](#typescript)
@@ -142,7 +142,7 @@ The returned `handle`:
 | --- | --- |
 | `handle.blocks` | Number of skeleton blocks currently painted |
 | `handle.update()` | Re-measure the real UI and rebuild every block |
-| `handle.setEffect('shimmer' \| 'pulse' \| 'none')` | Switch the animation at runtime |
+| `handle.setEffect(effect)` | Switch the animation at runtime (any of the 8 effects) |
 | `handle.destroy()` | Remove the skeleton and restore the real UI (idempotent) |
 
 ### `SkeletonLoader.restore(target)`
@@ -165,9 +165,10 @@ const data = await SkeletonLoader.while(() => api.getFeed(), '#feed', { minDurat
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `effect` | `'shimmer' \| 'pulse' \| 'none'` | `'shimmer'` | Animation style |
+| `effect` | `'shimmer' \| 'wave' \| 'pulse' \| 'fade' \| 'blink' \| 'sheen' \| 'bounce' \| 'none'` | `'shimmer'` | Animation style |
 | `color` | string | `#e5e7eb` | Base grey of every block (any CSS color) |
-| `highlightColor` | string | `#f3f4f6` | Bright band of the shimmer wave |
+| `highlightColor` | string | `#f3f4f6` | Bright band of shimmer / wave / sheen |
+| `duration` | string \| number | `1.4s` | One animation cycle — CSS time (`'2s'`) or milliseconds (`900`) |
 | `radius` | number | `8` | Corner radius (px) for rectangular blocks; text bars are always pills |
 | `exclude` | string \| function | — | CSS selector or `(el) => boolean` predicate; matching elements get no skeleton |
 | `textLines` | boolean | `true` | One bar per estimated text line; `false` draws a single bar per text element |
@@ -216,9 +217,10 @@ Wrap any markup; toggle the boolean `loading` attribute to switch between skelet
 | Attribute | Description |
 | --- | --- |
 | `loading` | Present (or `""`, `"true"`, `"1"`, `"on"`) shows the skeleton; `"false"` or removal reveals the UI |
-| `effect` | `shimmer` \| `pulse` \| `none` |
+| `effect` | `shimmer` \| `wave` \| `pulse` \| `fade` \| `blink` \| `sheen` \| `bounce` \| `none` |
 | `color` | Base block color |
-| `highlight-color` | Shimmer band color |
+| `highlight-color` | Shimmer / wave band color |
+| `duration` | One animation cycle — `"2s"` or `"900"` (ms) |
 | `radius` | Corner radius in px |
 
 JS control: `document.querySelector('skeleton-screen').show(options)` and `.hide()`.
@@ -258,12 +260,24 @@ export default function ProfileCard() {
 }
 ```
 
-Or use the Web Component directly (React 19 supports custom elements natively; React 16–18 pass attributes through as strings):
+Or use the Web Component directly (React 19 supports custom elements natively; React 16–18 pass attributes through as strings). In SSR frameworks (Next.js, Remix), render the element only after mount — otherwise the library upgrades the server-rendered element and mutates the DOM before hydration, which trips React's hydration check:
 
 ```jsx
-<skeleton-screen loading={isLoading ? '' : undefined} effect="shimmer">
-  <ProductCard product={product} />
-</skeleton-screen>
+'use client';
+import { useEffect, useState } from 'react';
+
+export default function Product() {
+  const [mounted, setMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => setMounted(true), []); // wait for hydration
+
+  return mounted ? (
+    <skeleton-screen loading={isLoading ? '' : undefined} effect="shimmer">
+      <ProductCard product={product} />
+    </skeleton-screen>
+  ) : null; // or a server-rendered static fallback
+}
 ```
 
 For the JSX type of the custom element, import the package once anywhere in the project — `index.d.ts` declares `<skeleton-screen>` for you.
@@ -344,16 +358,25 @@ Prefer a directive-free approach? `SkeletonLoader.scan(nativeElement.querySelect
 </script>
 ```
 
-## Effects: shimmer, pulse, none
+## Effects: 8 animation styles
 
-- **`shimmer`** — moving gradient wave (Facebook / YouTube style). Default.
-- **`pulse`** — opacity fade (Tailwind style). Cheaper to composite.
-- **`none`** — static grey blocks (for print, tests, or minimal UIs).
+| Effect | Description |
+| --- | --- |
+| `shimmer` | Moving gradient wave (Facebook / YouTube style). **Default.** |
+| `wave` | Diagonal light sweep — softer, "aurora" look |
+| `pulse` | Whole-card opacity fade (Tailwind style). Cheapest to composite |
+| `fade` | Staggered breathing cascade — blocks light up one after another |
+| `blink` | Hard "terminal cursor" blink |
+| `sheen` | One glossy light band sweeping across the whole skeleton |
+| `bounce` | Gentle vertical bob (Material style) |
+| `none` | Static grey blocks (print, tests, minimal UIs) |
 
 ```js
-SkeletonLoader.scan('#app', { effect: 'pulse' });
-handle.setEffect('shimmer'); // switch live, without rebuilding
+SkeletonLoader.scan('#app', { effect: 'fade', duration: 900 }); // ms or '2s'
+handle.setEffect('sheen'); // switch live, without rebuilding
 ```
+
+Speed is one knob — the `duration` option, the `duration` attribute on `<skeleton-screen>`, or the `--usk-duration` CSS variable.
 
 `prefers-reduced-motion: reduce` disables all animation automatically.
 
