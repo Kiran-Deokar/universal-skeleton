@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>universal-skeleton — demo playground</title>
+
+<!-- The CDN build (script-tag, zero setup). Locally this points at ../dist -->
+<script src="../dist/index.iife.min.js"></script>
+
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --ink: #111827;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --accent: #4f46e5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 28px 20px 64px; }
+
+  header.topbar { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .brand h1 { margin: 0; font-size: 26px; letter-spacing: -0.02em; }
+  .brand h1 code { background: none; color: var(--accent); font-size: 26px; }
+  .brand p { margin: 4px 0 0; color: var(--muted); }
+  .cdn {
+    display: flex; align-items: center; gap: 8px;
+    background: #0f172a; color: #e2e8f0; border-radius: 10px; padding: 10px 12px;
+    font: 12.5px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    max-width: 100%;
+  }
+  .cdn code { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 440px; }
+  .cdn button {
+    border: 1px solid #334155; background: #1e293b; color: #e2e8f0;
+    border-radius: 6px; padding: 4px 10px; cursor: pointer; font: inherit; flex: none;
+  }
+  .cdn button:hover { background: #334155; }
+
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 14px 18px; margin-bottom: 22px; box-shadow: 0 1px 2px rgb(16 24 40 / 0.04);
+  }
+  .controls label { display: flex; align-items: center; gap: 7px; font-size: 13.5px; color: var(--muted); }
+  .controls select, .controls input[type="number"] {
+    border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; font: inherit; background: #fff;
+  }
+  .controls input[type="color"] {
+    width: 34px; height: 30px; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer;
+  }
+  .spacer { flex: 1; }
+  .btn {
+    border: 1px solid var(--accent); background: var(--accent); color: #fff;
+    border-radius: 10px; padding: 8px 16px; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: #fff; color: var(--accent); }
+  .btn.small { padding: 6px 12px; font-size: 13.5px; }
+  .btn:disabled { opacity: 0.55; cursor: wait; }
+
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    padding: 20px; box-shadow: 0 1px 3px rgb(16 24 40 / 0.06);
+  }
+  .card > h2 { margin: 0 0 4px; font-size: 16px; }
+  .card > .desc { margin: 0 0 16px; color: var(--muted); font-size: 13.5px; }
+  .card > .desc code { background: #f1f5f9; border-radius: 5px; padding: 1px 5px; font-size: 12.5px; }
+
+  /* social feed */
+  .post-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .post-head img.avatar { width: 46px; height: 46px; border-radius: 50%; flex: none; }
+  .post-head .who b { display: block; font-size: 15px; }
+  .post-head .who span { color: var(--muted); font-size: 13px; }
+  .post-text { margin: 0 0 14px; color: #1f2937; }
+  .post-img { width: 100%; height: 170px; object-fit: cover; border-radius: 12px; display: block; margin-bottom: 14px; }
+  .post-actions { display: flex; gap: 8px; }
+  .chip-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--line); background: #fff; color: #374151;
+    padding: 7px 14px; border-radius: 999px; font: inherit; font-size: 13.5px; cursor: pointer;
+  }
+  .chip-btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+  .chip-btn:hover { background: #f9fafb; }
+
+  /* dashboard */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  .stat { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .stat p { margin: 0; font-size: 12px; color: var(--muted); }
+  .stat strong { font-size: 19px; letter-spacing: -0.01em; }
+  .badge {
+    display: inline-block; background: #ecfdf5; color: #047857; border-radius: 999px;
+    padding: 3px 10px; font-size: 12px; font-weight: 600; margin-bottom: 10px;
+  }
+  .chart {
+    display: flex; align-items: flex-end; gap: 10px; height: 110px;
+    border: 1px solid var(--line); border-radius: 12px; padding: 12px;
+  }
+  .chart i { flex: 1; border-radius: 6px 6px 2px 2px; }
+  .chart i:nth-child(1) { height: 40%; background: #c7d2fe; }
+  .chart i:nth-child(2) { height: 65%; background: #a5b4fc; }
+  .chart i:nth-child(3) { height: 52%; background: #c7d2fe; }
+  .chart i:nth-child(4) { height: 88%; background: #818cf8; }
+  .chart i:nth-child(5) { height: 70%; background: #a5b4fc; }
+  .chart i:nth-child(6) { height: 95%; background: #6366f1; }
+  .legend { color: var(--muted); font-size: 12.5px; margin-top: 8px; }
+
+  /* product row for the web component */
+  .product { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
+  .product .thumb { width: 64px; height: 64px; border-radius: 14px; flex: none; object-fit: cover; }
+  .product .meta b { display: block; font-size: 15px; }
+  .product .meta span { color: var(--muted); font-size: 13.5px; }
+  .product .price { margin-left: auto; font-weight: 700; color: var(--accent); font-size: 17px; }
+
+  /* async profile */
+  .profile { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .profile img { width: 54px; height: 54px; border-radius: 50%; }
+  .profile .who b { display: block; }
+  .profile .who span { color: var(--muted); font-size: 13.5px; }
+
+  footer.note { margin-top: 26px; color: var(--muted); font-size: 13px; text-align: center; }
+  footer.note code { background: #f1f5f9; border-radius: 5px; padding: 1px 5px; }
+
+  .warn {
+    background: #fef3c7; border: 1px solid #f59e0b; color: #92400e;
+    border-radius: 10px; padding: 10px 14px; margin-bottom: 18px; font-size: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="topbar">
+    <div class="brand">
+      <h1><code>universal-skeleton</code></h1>
+      <p>Framework-agnostic skeleton loader — the skeleton is generated from your real UI, automatically.</p>
+    </div>
+    <div class="cdn">
+      <code id="cdnSnippet">&lt;script src="https://unpkg.com/universal-skeleton/dist/index.iife.min.js"&gt;&lt;/script&gt;</code>
+      <button id="copyCdn" title="Copy CDN snippet">Copy</button>
+    </div>
+  </header>
+
+  <section class="controls">
+    <label>Effect
+      <select id="effect">
+        <option value="shimmer">shimmer</option>
+        <option value="pulse">pulse</option>
+        <option value="none">none</option>
+      </select>
+    </label>
+    <label>Base <input type="color" id="color" value="#e5e7eb" /></label>
+    <label>Highlight <input type="color" id="highlight" value="#f3f4f6" /></label>
+    <label>Radius <input type="number" id="radius" value="8" min="0" max="40" /></label>
+    <span class="spacer"></span>
+    <button class="btn" id="btnShow">Show skeleton</button>
+    <button class="btn ghost" id="btnReveal">Reveal content</button>
+  </section>
+
+  <main class="grid">
+
+    <!-- 1. AUTO-SCAN -->
+    <article class="card" id="feedCard">
+      <h2>1 &middot; Auto-scan</h2>
+      <p class="desc"><code>SkeletonLoader.scan('#feedCard')</code> mirrors text, avatars, images and buttons automatically.</p>
+      <div class="post-head">
+        <img class="avatar" alt="Ada Lovelace" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23e0e7ff'/%3E%3Ccircle cx='32' cy='26' r='13' fill='%23a5b4fc'/%3E%3Cpath d='M10 64c2-16 12-22 22-22s20 6 22 22z' fill='%23a5b4fc'/%3E%3C/svg%3E" />
+        <div class="who"><b>Ada Lovelace</b><span>@ada &middot; 2h ago</span></div>
+      </div>
+      <p class="post-text">Analyze engine, class 9 — the first algorithm designed for a machine. Programs before computers existed. Yes, really: 1843.</p>
+      <img class="post-img" alt="Mountains" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='300' viewBox='0 0 600 300'%3E%3Crect width='600' height='300' fill='%23dbeafe'/%3E%3Ccircle cx='500' cy='60' r='30' fill='%23fde68a'/%3E%3Cpath d='M0 240 L150 120 L260 210 L380 90 L600 260 L600 300 L0 300 Z' fill='%2393c5fd'/%3E%3Cpath d='M0 260 L120 170 L240 240 L400 150 L600 250 L600 300 L0 300 Z' fill='%2360a5fa'/%3E%3C/svg%3E" />
+      <div class="post-actions">
+        <button class="chip-btn"><svg viewBox="0 0 24 24"><path d="M20.8 8.6a5.3 5.3 0 0 0-9.2-3.6L12 5.6l-.5-.6a5.3 5.3 0 0 0-9.3 3.6c0 5.6 9.8 10.7 9.8 10.7s9.8-5.1 9.8-10.7z"/></svg>Like</button>
+        <button class="chip-btn"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H4l3-3a8 8 0 1 1 14-5z"/></svg>Comment</button>
+        <button class="chip-btn"><svg viewBox="0 0 24 24"><path d="M4 12v7h16v-7M12 3v13M8 7l4-4 4 4"/></svg>Share</button>
+      </div>
+    </article>
+
+    <!-- 2. DATA ATTRIBUTES -->
+    <article class="card">
+      <h2>2 &middot; Manual mode — data attributes</h2>
+      <p class="desc">Fine-grained control: <code>data-skeleton="circle|rect|text|ignore"</code>, plus <code>-radius</code> and <code>-color</code>.</p>
+      <div id="manualCard">
+        <span class="badge" data-skeleton="ignore">Live &middot; ignored</span>
+        <div class="stats">
+          <div class="stat"><p>Requests</p><strong>24.8k</strong></div>
+          <div class="stat"><p>Uptime</p><strong>99.98%</strong></div>
+          <div class="stat" data-skeleton="rect" data-skeleton-radius="12" data-skeleton-color="#c7d2fe"><p>Custom color</p><strong>+128%</strong></div>
+        </div>
+        <div class="chart" data-skeleton="rect" title="chart">
+          <i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+        <p class="legend">Traffic this week — the chart becomes one rounded block, the badge stays visible.</p>
+      </div>
+    </article>
+
+    <!-- 3. WEB COMPONENT -->
+    <article class="card">
+      <h2>3 &middot; Web Component</h2>
+      <p class="desc"><code>&lt;skeleton-screen loading&gt;</code> — works in React, Vue, Angular, Svelte and plain HTML.</p>
+      <skeleton-screen id="wcDemo" loading effect="shimmer">
+        <div class="product">
+          <img class="thumb" alt="Headphones" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ede9fe'/%3E%3Cpath d='M16 36v-4a16 16 0 0 1 32 0v4' stroke='%237c3aed' stroke-width='4' fill='none'/%3E%3Crect x='12' y='36' width='10' height='16' rx='4' fill='%237c3aed'/%3E%3Crect x='42' y='36' width='10' height='16' rx='4' fill='%237c3aed'/%3E%3C/svg%3E" />
+          <div class="meta"><b>Studio Headphones</b><span>Wireless &middot; ANC &middot; 40h</span></div>
+          <div class="price">$249</div>
+        </div>
+      </skeleton-screen>
+      <button class="btn small" id="wcToggle">Reveal content</button>
+    </article>
+
+    <!-- 4. ASYNC -->
+    <article class="card">
+      <h2>4 &middot; Async — <code>SkeletonLoader.while()</code></h2>
+      <p class="desc">Skeleton shows while a promise runs, then the UI is restored automatically.</p>
+      <div id="asyncCard">
+        <div class="profile">
+          <img alt="Grace Hopper" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23fce7f3'/%3E%3Ccircle cx='32' cy='26' r='13' fill='%23f472b6'/%3E%3Cpath d='M10 64c2-16 12-22 22-22s20 6 22 22z' fill='%23f472b6'/%3E%3C/svg%3E" />
+          <div class="who"><b id="asyncName">Grace Hopper</b><span id="asyncRole">Rear Admiral &middot; invented the compiler</span></div>
+        </div>
+        <p style="color:#6b7280; margin:0">Click the button: the card is skeletonized for ~1.4s while the fake request runs.</p>
+      </div>
+      <button class="btn small" id="btnLoad">Simulate slow load</button>
+    </article>
+
+  </main>
+
+  <footer class="note">
+    Zero dependencies &middot; ~4 KB gzipped &middot; <code>prefers-reduced-motion</code> respected automatically &middot;
+    resize the window while a skeleton is visible — blocks rebuild live.
+  </footer>
+</div>
+
+<script>
+  (function () {
+    if (!window.UniversalSkeleton) {
+      document.querySelector('.wrap').insertAdjacentHTML(
+        'afterbegin',
+        '<div class="warn"><b>dist build not found.</b> Run <code>npm install &amp;&amp; npm run build</code> first, then reload this page.</div>'
+      );
+      return;
+    }
+
+    const { SkeletonLoader } = window.UniversalSkeleton;
+
+    const effectEl = document.getElementById('effect');
+    const colorEl = document.getElementById('color');
+    const highlightEl = document.getElementById('highlight');
+    const radiusEl = document.getElementById('radius');
+
+    function opts() {
+      return {
+        effect: effectEl.value,
+        color: colorEl.value,
+        highlightColor: highlightEl.value,
+        radius: parseInt(radiusEl.value, 10) || 0,
+      };
+    }
+
+    // live theme: CSS variables affect every skeleton instantly
+    colorEl.addEventListener('input', () => document.documentElement.style.setProperty('--usk-color', colorEl.value));
+    highlightEl.addEventListener('input', () => document.documentElement.style.setProperty('--usk-highlight', highlightEl.value));
+
+    // Card 1 — auto scan
+    document.getElementById('btnShow').addEventListener('click', () => {
+      SkeletonLoader.scan('#feedCard', opts());
+    });
+    document.getElementById('btnReveal').addEventListener('click', () => {
+      SkeletonLoader.restore('#feedCard');
+    });
+
+    // Card 2 — manual data attributes start skeletonized
+    SkeletonLoader.scan('#manualCard', { effect: effectEl.value });
+
+    // Card 3 — web component toggle
+    const wc = document.getElementById('wcDemo');
+    const wcBtn = document.getElementById('wcToggle');
+    wcBtn.addEventListener('click', () => {
+      const showing = wc.hasAttribute('loading') && wc.getAttribute('loading') !== 'false';
+      wc.setAttribute('loading', showing ? 'false' : 'true');
+      wcBtn.textContent = showing ? 'Show skeleton' : 'Reveal content';
+    });
+
+    // Card 4 — async while()
+    const btnLoad = document.getElementById('btnLoad');
+    btnLoad.addEventListener('click', () => {
+      btnLoad.disabled = true;
+      const fakeFetch = () => new Promise((resolve) =>
+        setTimeout(() => resolve({ name: 'Grace Hopper', role: 'Rear Admiral · invented the compiler (1952)' }), 700)
+      );
+      SkeletonLoader.while(fakeFetch(), '#asyncCard', { minDuration: 1400 })
+        .then((user) => {
+          document.getElementById('asyncName').textContent = user.name;
+          document.getElementById('asyncRole').textContent = user.role;
+        })
+        .finally(() => { btnLoad.disabled = false; });
+    });
+
+    // CDN copy
+    document.getElementById('copyCdn').addEventListener('click', (e) => {
+      const text = '<script src="https://unpkg.com/universal-skeleton/dist/index.iife.min.js"><\/script>';
+      navigator.clipboard.writeText(text).then(() => {
+        e.target.textContent = 'Copied!';
+        setTimeout(() => { e.target.textContent = 'Copy'; }, 1500);
+      });
+    });
+  })();
+</script>
+</body>
+</html>
