@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Favicon for universal-skeleton — mirrors the LogoMark in the topbar:
+       a rounded tile with three skeleton placeholder bars (emerald, then two greys). -->
+  <rect x="0.75" y="0.75" width="30.5" height="30.5" rx="7.25" fill="#fafafa" stroke="#d4d4d8" stroke-width="1.5"/>
+  <rect x="6" y="7.25" width="20" height="4.2" rx="2.1" fill="#10b981"/>
+  <rect x="6" y="13.9" width="13.3" height="4.2" rx="2.1" fill="#71717a"/>
+  <rect x="6" y="20.55" width="10" height="4.2" rx="2.1" fill="#a1a1aa"/>
+</svg>

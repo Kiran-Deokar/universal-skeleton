@@ -12,7 +12,7 @@ import type { Guide, GuideSection } from './guides-data';
 import { CodeBlock } from './code-block';
 import { renderInline } from './inline';
 import { GuideLiveDemo } from './demos';
-import type { SkeletonEffect } from '@/lib/universal-skeleton/index.esm.mjs';
+import type { SkeletonEffect } from 'universal-skeleton';
 
 /** Signature animation per framework — used for the live preview panel. */
 const GUIDE_EFFECTS: Record<string, SkeletonEffect> = {

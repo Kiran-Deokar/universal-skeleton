@@ -255,7 +255,9 @@ export function DocsSite() {
             className="flex items-center gap-2.5 rounded-lg px-1 py-1 transition-opacity hover:opacity-80"
           >
             <LogoMark />
-            <span className="text-left">
+            {/* Wordmark hidden on phones — the logo mark alone is tappable and
+                keeps the header inside the viewport on 360-420px screens. */}
+            <span className="hidden text-left sm:block">
               <span className="block font-mono text-sm font-semibold leading-tight text-foreground">universal-skeleton</span>
               <span className="hidden text-[11px] leading-tight text-muted-foreground sm:block">framework-agnostic skeleton loader</span>
             </span>
@@ -269,7 +271,9 @@ export function DocsSite() {
                   key={l.route}
                   onClick={() => navigate(l.route)}
                   aria-current={active ? 'page' : undefined}
-                  className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                  className={`rounded-lg px-2.5 py-2 text-sm font-medium transition-colors sm:px-3 ${
+                    l.route === 'home' ? 'hidden sm:block' : ''
+                  } ${
                     active
                       ? 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-300 dark:bg-emerald-950/70 dark:text-emerald-300 dark:ring-emerald-900'
                       : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'

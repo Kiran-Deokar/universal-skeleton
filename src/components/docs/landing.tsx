@@ -23,7 +23,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { SkeletonLoader, type SkeletonEffect } from '@/lib/universal-skeleton/index.esm.mjs';
+import { SkeletonLoader, type SkeletonEffect } from 'universal-skeleton';
 import { CodeBlock } from './code-block';
 import { ProfileCard, useSkeleton, useMounted } from './sample-card';
 import { useSiteTheme } from './use-site-theme';
@@ -310,7 +310,7 @@ const STATS = [
 
 export function Landing({ onNavigate }: { onNavigate?: (route: string) => void }) {
   return (
-    <div className="space-y-20">
+    <div className="space-y-12 sm:space-y-20">
       {/* Hero */}
       <section className="grid items-center gap-10 lg:grid-cols-2">
         <div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Dices, Loader2, Play, RotateCcw } from 'lucide-react';
-import { SkeletonLoader, type SkeletonEffect } from '@/lib/universal-skeleton/index.esm.mjs';
+import { SkeletonLoader, type SkeletonEffect } from 'universal-skeleton';
 import { ProfileCard, useSkeleton, useMounted } from './sample-card';
 import { CodeBlock } from './code-block';
 import { Slider } from '@/components/ui/slider';

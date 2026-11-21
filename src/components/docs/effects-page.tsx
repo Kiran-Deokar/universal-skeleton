@@ -7,8 +7,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import type { SkeletonEffect, SkeletonHandle } from '@/lib/universal-skeleton/index.esm.mjs';
-import { SkeletonLoader } from '@/lib/universal-skeleton/index.esm.mjs';
+import { SkeletonLoader, type SkeletonEffect, type SkeletonHandle } from 'universal-skeleton';
 import { CodeBlock } from './code-block';
 import { renderInline } from './inline';
 import { useSiteTheme } from './use-site-theme';

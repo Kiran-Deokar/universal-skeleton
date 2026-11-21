@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useSyncExternalStore } from 'react';
-import { SkeletonLoader, type SkeletonOptions } from '@/lib/universal-skeleton/index.esm.mjs';
+import { SkeletonLoader, type SkeletonOptions } from 'universal-skeleton';
 
 const emptySubscribe = () => () => {};
 

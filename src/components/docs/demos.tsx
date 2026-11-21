@@ -12,7 +12,7 @@ import {
   SkeletonLoader,
   type SkeletonEffect,
   type SkeletonOptions,
-} from '@/lib/universal-skeleton/index.esm.mjs';
+} from 'universal-skeleton';
 import { Button } from '@/components/ui/button';
 import { ProfileCard, useMounted } from './sample-card';
 import { useSiteTheme } from './use-site-theme';

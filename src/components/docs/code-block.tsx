@@ -89,7 +89,7 @@ export function CodeBlock({
 
   if (bare) {
     return (
-      <div className={`relative group rounded-xl border border-zinc-800 bg-zinc-950 ${className}`}>
+      <div className={`group relative overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-950 ${className}`}>
         <SyntaxHighlighter
           language={lang}
           style={vscDarkPlus}
@@ -100,7 +100,15 @@ export function CodeBlock({
             fontSize: '0.8125rem',
             lineHeight: 1.65,
           }}
-          codeTagProps={{ style: { fontFamily: 'var(--font-mono), monospace' } }}
+          codeTagProps={{
+            style: {
+              fontFamily: 'var(--font-mono), monospace',
+              // Break long unbroken tokens (CDN URLs, paths) on narrow screens
+              // — white-space: pre-wrap alone will not wrap them.
+              overflowWrap: 'anywhere',
+              wordBreak: 'break-word',
+            },
+          }}
           wrapLongLines
         >
           {code}
@@ -150,7 +158,13 @@ export function CodeBlock({
             fontSize: '0.8125rem',
             lineHeight: 1.65,
           }}
-          codeTagProps={{ style: { fontFamily: 'var(--font-mono), monospace' } }}
+          codeTagProps={{
+            style: {
+              fontFamily: 'var(--font-mono), monospace',
+              overflowWrap: 'anywhere',
+              wordBreak: 'break-word',
+            },
+          }}
           wrapLongLines
         >
           {code}
