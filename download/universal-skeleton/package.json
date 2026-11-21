@@ -3,7 +3,7 @@
   "version": "1.1.0",
   "description": "Framework-agnostic skeleton loader that auto-generates skeletons from your real UI. 8 effects (shimmer, wave, pulse, fade, blink, sheen, bounce). Zero dependencies. Works via CDN, React, Vue, Angular, Svelte, Web Components — any JS or TS project.",
   "license": "MIT",
-  "author": "",
+  "author": "Kiran Deokar",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.esm.js",
