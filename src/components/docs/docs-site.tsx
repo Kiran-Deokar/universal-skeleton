@@ -280,7 +280,7 @@ export function DocsSite() {
               );
             })}
             <a
-              href="https://github.com/your-username/universal-skeleton"
+              href="https://github.com/Kiran-Deokar/universal-skeleton"
               target="_blank"
               rel="noreferrer noopener"
               aria-label="GitHub repository"
