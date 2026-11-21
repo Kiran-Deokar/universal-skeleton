@@ -54,6 +54,8 @@ interface CodeBlockProps {
   label?: string;
   className?: string;
   maxHeight?: number;
+  /** Drop the outer border/rounding — for embedding inside tab panels. */
+  flush?: boolean;
 }
 
 export function CodeBlock({
@@ -63,6 +65,7 @@ export function CodeBlock({
   label,
   className = '',
   maxHeight = 520,
+  flush = false,
 }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
 
@@ -114,7 +117,9 @@ export function CodeBlock({
   }
 
   return (
-    <div className={`overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950 ${className}`}>
+    <div
+      className={`${flush ? 'bg-zinc-950' : 'overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950'} ${className}`}
+    >
       <div className="flex items-center justify-between border-b border-zinc-800 bg-zinc-900/60 px-3 py-1.5">
         <span className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">{language}</span>
         {label ? <span className="font-mono text-[11px] text-zinc-500">{label}</span> : null}

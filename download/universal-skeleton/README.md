@@ -49,7 +49,7 @@ Works everywhere. **One package, any language, any framework:**
 - [Local development](#local-development)
 - [Publishing your own copy](#publishing-your-own-copy)
 
-> Full documentation ships in [`docs/`](docs/index.html) — a landing page with live examples, per-framework integration guides ([vanilla](docs/guides/vanilla.html) · [React](docs/guides/react.html) · [Vue](docs/guides/vue.html) · [Angular](docs/guides/angular.html) · [Svelte](docs/guides/svelte.html) · [Lit](docs/guides/lit.html) · [jQuery](docs/guides/jquery.html)) and a complete [API reference](docs/api.html).
+> Try the interactive playground: open [`demo/index.html`](demo/index.html) in a browser after a build (or run `npm run demo`). It runs the real library — an effects gallery with all 8 animations, auto-scan demos, `while()` async flows and the `<skeleton-screen>` Web Component.
 
 ## Install
 
@@ -467,8 +467,7 @@ npm test           # vitest unit tests (41 tests)
 npm run demo       # serve demo/ playground, open the printed URL
 ```
 
-Open `demo/index.html` directly in a browser too — it works from `file://` after a build.
-The documentation site in `docs/` also works from `file://` (e.g. `open docs/index.html`); its pages load `dist/` by relative path, so run `npm run build` first.
+Open `demo/index.html` directly in a browser too — it works from `file://` after a build (it loads `../dist` by relative path).
 
 ## Publishing your own copy
 

@@ -1,0 +1,852 @@
+     1→/**
+     2→ * Integration guide content for the docs site.
+     3→ * Each guide is self-contained: prose + runnable code samples.
+     4→ */
+     5→
+     6→import type { LucideIcon } from 'lucide-react';
+     7→import {
+     8→  Braces,
+     9→  Component,
+    10→  FileCode2,
+    11→  Globe,
+    12→  History,
+    13→  Layers,
+    14→  Radio,
+    15→  ShieldCheck,
+    16→  Triangle,
+    17→  Type,
+    18→  Workflow,
+    19→} from 'lucide-react';
+    20→
+    21→export interface GuideSection {
+    22→  heading: string;
+    23→  body?: string;
+    24→  code?: { lang: string; label?: string; code: string };
+    25→  bullets?: string[];
+    26→}
+    27→
+    28→export interface Guide {
+    29→  slug: string;
+    30→  title: string;
+    31→  tag: string;
+    32→  icon: LucideIcon;
+    33→  intro: string;
+    34→  sections: GuideSection[];
+    35→}
+    36→
+    37→export const GUIDES: Guide[] = [
+    38→  {
+    39→    slug: 'vanilla',
+    40→    title: 'Plain HTML / Vanilla JS',
+    41→    tag: 'CDN',
+    42→    icon: Globe,
+    43→    intro:
+    44→      'The zero-build path: one script tag and the library is on your page. This is also the exact same API every other guide calls under the hood.',
+    45→    sections: [
+    46→      {
+    47→        heading: 'Install via CDN',
+    48→        body: 'unpkg and jsDelivr serve the browser build automatically. The global is UniversalSkeleton and the stylesheet is injected for you — no <link> needed.',
+    49→        code: {
+    50→          lang: 'html',
+    51→          label: 'index.html',
+    52→          code: `<!DOCTYPE html>
+    53→<html>
+    54→  <head>
+    55→    <!-- pick one CDN -->
+    56→    <script src="https://unpkg.com/universal-skeleton/dist/index.iife.min.js"></script>
+    57→    <!-- <script src="https://cdn.jsdelivr.net/npm/universal-skeleton/dist/index.iife.min.js"></script> -->
+    58→  </head>
+    59→  <body>
+    60→    <div id="app">
+    61→      <h1>My dashboard</h1>
+    62→      <img id="avatar" src="avatar.jpg" alt="me" />
+    63→      <p id="bio">Loading my profile…</p>
+    64→    </div>
+    65→
+    66→    <script>
+    67→      // 1. Skeleton mirrors the real UI of #app
+    68→      UniversalSkeleton.SkeletonLoader.scan('#app');
+    69→
+    70→      // 2. …your data arrives…
+    71→      fetch('/api/me')
+    72→        .then(function (r) { return r.json(); })
+    73→        .then(function (me) {
+    74→          document.getElementById('bio').textContent = me.bio;
+    75→        })
+    76→        .finally(function () {
+    77→          // 3. Restore the real UI
+    78→          UniversalSkeleton.SkeletonLoader.restore('#app');
+    79→        });
+    80→    </script>
+    81→  </body>
+    82→</html>`,
+    83→        },
+    84→      },
+    85→      {
+    86→        heading: 'The while() helper',
+    87→        body: 'show skeleton while a promise runs, restore automatically — even when it rejects:',
+    88→        code: {
+    89→          lang: 'javascript',
+    90→          code: `const data = await UniversalSkeleton.SkeletonLoader.while(
+    91→  fetch('/api/feed').then((r) => r.json()),
+    92→  '#feed',
+    93→  { effect: 'wave', minDuration: 400 }
+    94→);`,
+    95→        },
+    96→      },
+    97→      {
+    98→        heading: 'Or use the Web Component — no JavaScript at all',
+    99→        code: {
+   100→          lang: 'html',
+   101→          code: `<skeleton-screen loading effect="sheen">
+   102→  <article class="post">…your real markup…</article>
+   103→</skeleton-screen>
+   104→
+   105→<!-- later, plain JS flips it: -->
+   106→<script>
+   107→  document
+   108→    .querySelector('skeleton-screen')
+   109→    .removeAttribute('loading');   // skeleton off, real UI on
+   110→</script>`,
+   111→        },
+   112→      },
+   113→      {
+   114→        heading: 'ES module instead of a global?',
+   115→        code: {
+   116→          lang: 'javascript',
+   117→          code: `import { SkeletonLoader, SkeletonScreen } from
+   118→  'https://cdn.jsdelivr.net/npm/universal-skeleton/dist/index.esm.js';`,
+   119→        },
+   120→      },
+   121→    ],
+   122→  },
+   123→  {
+   124→    slug: 'react',
+   125→    title: 'React (Vite, CRA, CSR)',
+   126→    tag: 'CSR',
+   127→    icon: Component,
+   128→    intro:
+   129→      'Two options: the imperative scan/restore API for data-fetching flows, or the <skeleton-screen> element used like any other JSX tag. The package ships TypeScript declarations, so no @types install is needed.',
+   130→    sections: [
+   131→      {
+   132→        heading: 'Install',
+   133→        code: { lang: 'bash', code: 'npm install universal-skeleton' },
+   134→      },
+   135→      {
+   136→        heading: 'Option A — scan() / while() in useEffect',
+   137→        body: 'Scan after the browser has painted the real DOM; the handle cleans up on unmount.',
+   138→        code: {
+   139→          lang: 'jsx',
+   140→          label: 'Feed.jsx',
+   141→          code: `import { useEffect, useRef, useState } from 'react';
+   142→import { SkeletonLoader } from 'universal-skeleton';
+   143→
+   144→export function Feed() {
+   145→  const ref = useRef(null);
+   146→  const [user, setUser] = useState(null);
+   147→
+   148→  // Show skeleton while there is no data
+   149→  useEffect(() => {
+   150→    if (!user && ref.current) {
+   151→      const handle = SkeletonLoader.scan(ref.current, { effect: 'fade' });
+   152→      return () => handle.destroy(); // restore on unmount / data
+   153→    }
+   154→  }, [user]);
+   155→
+   156→  // Simplest flow: skeleton around the fetch itself
+   157→  const load = () =>
+   158→    SkeletonLoader.while(fetch('/api/user').then((r) => r.json()), ref.current)
+   159→      .then(setUser);
+   160→
+   161→  return (
+   162→    <section ref={ref}>
+   163→      <h2>{user ? user.name : 'Loading…'}</h2>
+   164→      <button onClick={load}>Reload</button>
+   165→    </section>
+   166→  );
+   167→}`,
+   168→        },
+   169→      },
+   170→      {
+   171→        heading: 'Option B — the <skeleton-screen> element',
+   172→        body: 'React 19 supports custom elements natively. Pass boolean attributes as an empty string (present) or undefined (removed):',
+   173→        code: {
+   174→          lang: 'jsx',
+   175→          code: `import { useState } from 'react';
+   176→import 'universal-skeleton'; // registers <skeleton-screen> once
+   177→
+   178→export function Card() {
+   179→  const [loading, setLoading] = useState(true);
+   180→
+   181→  useEffect(() => {
+   182→    const t = setTimeout(() => setLoading(false), 1500);
+   183→    return () => clearTimeout(t);
+   184→  }, []);
+   185→
+   186→  return (
+   187→    <skeleton-screen loading={loading ? '' : undefined} effect="wave" radius="12">
+   188→      <ProductCard />
+   189→    </skeleton-screen>
+   190→  );
+   191→}`,
+   192→        },
+   193→      },
+   194→      {
+   195→        heading: 'React 16–18?',
+   196→        bullets: [
+   197→          'React treats unknown elements as strings-only before v19 — boolean props must be strings: loading={loading ? "" : undefined} (never loading={true}).',
+   198→          'event listeners on custom elements need a ref callback — but you rarely need events here.',
+   199→          'For full JSX typing in older setups, add the global JSX declaration from the package (index.d.ts already declares <skeleton-screen> for classic JSX namespaces).',
+   200→        ],
+   201→      },
+   202→    ],
+   203→  },
+   204→  {
+   205→    slug: 'nextjs',
+   206→    title: 'Next.js (App Router)',
+   207→    tag: 'SSR',
+   208→    icon: Triangle,
+   209→    intro:
+   210→      'Skeletons are a browser concern: the library is SSR-safe (importing it on the server does nothing), but scanning must happen in client components after hydration.',
+   211→    sections: [
+   212→      {
+   213→        heading: 'Install + mark the component as client',
+   214→        code: {
+   215→          lang: 'bash',
+   216→          code: 'npm install universal-skeleton',
+   217→        },
+   218→      },
+   219→      {
+   220→        heading: 'Option A — while() around a client-side fetch',
+   221→        body: 'The cleanest Next.js pattern: a "use client" island that fetches on mount, with the skeleton mirroring your real markup while the request is in flight.',
+   222→        code: {
+   223→          lang: 'jsx',
+   224→          label: 'app/feed.tsx',
+   225→          code: `'use client';
+   226→
+   227→import { useEffect, useRef, useState } from 'react';
+   228→import { SkeletonLoader } from 'universal-skeleton';
+   229→
+   230→type Post = { title: string; body: string };
+   231→
+   232→export function Feed() {
+   233→  const ref = useRef<HTMLDivElement>(null);
+   234→  const [posts, setPosts] = useState<Post[] | null>(null);
+   235→
+   236→  useEffect(() => {
+   237→    if (!ref.current) return;
+   238→    SkeletonLoader.while(
+   239→      fetch('/api/posts').then((r) => r.json()) as Promise<Post[]>,
+   240→      ref.current,
+   241→      { effect: 'shimmer', minDuration: 300 }
+   242→    )
+   243→      .then(setPosts)
+   244→      .catch(() => setPosts([])); // restore even on failure
+   245→  }, []);
+   246→
+   247→  return (
+   248→    <div ref={ref} className="feed">
+   249→      {(posts ?? []).map((p) => (
+   250→        <article key={p.title}>
+   251→          <h3>{p.title}</h3>
+   252→          <p>{p.body}</p>
+   253→        </article>
+   254→      ))}
+   255→    </div>
+   256→  );
+   257→}`,
+   258→        },
+   259→      },
+   260→      {
+   261→        heading: 'Option B — <skeleton-screen> inside a client component',
+   262→        body: 'In SSR frameworks, render the element only after mount: the library upgrades server-rendered custom elements before hydration and mutates the DOM under React, which trips the hydration check. One mounted flag fixes it:',
+   263→        code: {
+   264→          lang: 'tsx',
+   265→          code: `'use client';
+   266→
+   267→import { useEffect, useState } from 'react';
+   268→import 'universal-skeleton'; // registers the custom element in the browser
+   269→
+   270→export function Profile() {
+   271→  const [mounted, setMounted] = useState(false);
+   272→  const [loading, setLoading] = useState(true);
+   273→
+   274→  useEffect(() => setMounted(true), []); // wait for hydration
+   275→
+   276→  return mounted ? (
+   277→    <skeleton-screen loading={loading ? '' : undefined} effect="sheen">
+   278→      <ProfileView onReady={() => setLoading(false)} />
+   279→    </skeleton-screen>
+   280→  ) : (
+   281→    <ProfileSkeletonFallback /> // or null — SSR renders this
+   282→  );
+   283→}`,
+   284→        },
+   285→        bullets: [
+   286→          'The scan()/while() API (Option A) does not need the gate — scanning happens in useEffect, which always runs after hydration.',
+   287→          'Plain client-side rendered React (Vite, CRA) can render the element directly, no gate needed.',
+   288→        ],
+   289→      },
+   290→      {
+   291→        heading: 'Server Components & streaming',
+   292→        bullets: [
+   293→          'Do not import the library in a Server Component file — it would bundle into the RSC graph. Keep it inside "use client" files only.',
+   294→          'For streamed RSC content, React Suspense fallback markup is still the right tool; combine it: Suspense renders a static skeleton, universal-skeleton covers client fetches.',
+   295→          'The CJS build (dist/index.cjs) is what Node loads — importing it never touches document, so build/SSR never crashes.',
+   296→        ],
+   297→      },
+   298→    ],
+   299→  },
+   300→  {
+   301→    slug: 'vue',
+   302→    title: 'Vue 3',
+   303→    tag: 'Composition API',
+   304→    icon: Layers,
+   305→    intro:
+   306→      'Vue templates accept custom elements directly — <skeleton-screen> is usable without any plugin. For the imperative API, call scan() from lifecycle hooks.',
+   307→    sections: [
+   308→      {
+   309→        heading: 'Install',
+   310→        code: { lang: 'bash', code: 'npm install universal-skeleton' },
+   311→      },
+   312→      {
+   313→        heading: 'Option A — the element in your template',
+   314→        code: {
+   315→          lang: 'html',
+   316→          label: 'ProfileCard.vue',
+   317→          code: `<script setup>
+   318→import { ref, onMounted } from 'vue';
+   319→import 'universal-skeleton'; // registers <skeleton-screen> in the browser
+   320→
+   321→const loading = ref(true);
+   322→
+   323→onMounted(async () => {
+   324→  const user = await fetchUser(); // your loader
+   325→  loading.value = false;
+   326→});
+   327→</script>
+   328→
+   329→<template>
+   330→  <skeleton-screen :loading="loading ? '' : undefined" effect="fade" radius="10">
+   331→    <UserCard :user="user" />
+   332→  </skeleton-screen>
+   333→</template>`,
+   334→        },
+   335→      },
+   336→      {
+   337→        heading: 'Tell the compiler it is a custom element (optional)',
+   338→        body: 'Vue dev builds warn about unknown tags. One line in vite.config silences it — not required in production:',
+   339→        code: {
+   340→          lang: 'javascript',
+   341→          label: 'vite.config.ts',
+   342→          code: `export default defineConfig({
+   343→  plugins: [
+   344→    vue({
+   345→      template: {
+   346→        compilerOptions: {
+   347→          isCustomElement: (tag) => tag === 'skeleton-screen',
+   348→        },
+   349→      },
+   350→    }),
+   351→  ],
+   352→});`,
+   353→        },
+   354→      },
+   355→      {
+   356→        heading: 'Option B — scan() / restore()',
+   357→        code: {
+   358→          lang: 'javascript',
+   359→          code: `import { SkeletonLoader } from 'universal-skeleton';
+   360→
+   361→const root = useTemplateRef('root'); // Vue 3.5+
+   362→let handle = null;
+   363→
+   364→onMounted(async () => {
+   365→  handle = SkeletonLoader.scan(root.value, { effect: 'wave' });
+   366→  Object.assign(state, await fetchUser());
+   367→  handle.destroy();
+   368→});
+   369→
+   370→onBeforeUnmount(() => handle?.destroy());`,
+   371→        },
+   372→      },
+   373→    ],
+   374→  },
+   375→  {
+   376→    slug: 'nuxt',
+   377→    title: 'Nuxt 3',
+   378→    tag: 'SSR',
+   379→    icon: Workflow,
+   380→    intro:
+   381→      'The library is SSR-safe — importing it on the server is a no-op. The Web Component, however, should be rendered client-side only with <ClientOnly> for a clean hydration.',
+   382→    sections: [
+   383→      {
+   384→        heading: 'Install + configure the custom element',
+   385→        code: {
+   386→          lang: 'typescript',
+   387→          label: 'nuxt.config.ts',
+   388→          code: `export default defineNuxtConfig({
+   389→  vue: {
+   390→    compilerOptions: {
+   391→      isCustomElement: (tag) => tag === 'skeleton-screen',
+   392→    },
+   393→  },
+   394→});`,
+   395→        },
+   396→      },
+   397→      {
+   398→        heading: 'Use it — ClientOnly + attribute binding',
+   399→        code: {
+   400→          lang: 'html',
+   401→          label: 'app.vue',
+   402→          code: `<script setup>
+   403→import { ref } from 'vue';
+   404→
+   405→const loading = ref(true);
+   406→const user = ref(null);
+   407→
+   408→onMounted(async () => {
+   409→  user.value = await $fetch('/api/me');
+   410→  loading.value = false;
+   411→});
+   412→</script>
+   413→
+   414→<template>
+   415→  <ClientOnly>
+   416→    <skeleton-screen :loading="loading ? '' : undefined" effect="pulse">
+   417→      <UserCard :user="user" />
+   418→    </skeleton-screen>
+   419→  </ClientOnly>
+   420→</template>`,
+   421→        },
+   422→      },
+   423→      {
+   424→        heading: 'Imperative API in a Nuxt page',
+   425→        code: {
+   426→          lang: 'javascript',
+   427→          code: `// Always client-side: inside onMounted / event handlers
+   428→onMounted(() => {
+   429→  SkeletonLoader.while($fetch('/api/feed'), '#feed', { effect: 'blink' });
+   430→});`,
+   431→        },
+   432→        bullets: [
+   433→          'Import the package inside <script setup> of a component that also renders on the client — Nuxt tree-shakes it correctly per environment.',
+   434→          'For data fetched in useAsyncData (server-side), you usually do not need a skeleton at all — the page arrives with data; use skeletons for client-side navigations and lazy components.',
+   435→        ],
+   436→      },
+   437→    ],
+   438→  },
+   439→  {
+   440→    slug: 'angular',
+   441→    title: 'Angular',
+   442→    tag: 'v17+',
+   443→    icon: ShieldCheck,
+   444→    intro:
+   445→      'Angular needs one schema tweak to accept custom elements, then the Web Component binds like any other tag. The imperative API works from services and lifecycle hooks.',
+   446→    sections: [
+   447→      {
+   448→        heading: 'Install + declare the element',
+   449→        code: {
+   450→          lang: 'typescript',
+   451→          label: 'app.component.ts',
+   452→          code: `import { CUSTOM_ELEMENTS_SCHEMA, Component } from '@angular/core';
+   453→import 'universal-skeleton'; // registers <skeleton-screen> in the browser
+   454→
+   455→@Component({
+   456→  selector: 'app-root',
+   457→  templateUrl: './app.component.html',
+   458→  schemas: [CUSTOM_ELEMENTS_SCHEMA], // ← allow custom elements
+   459→})
+   460→export class AppComponent {
+   461→  loading = true;
+   462→
+   463→  ngOnInit() {
+   464→    this.api.getProfile().subscribe(() => (this.loading = false));
+   465→  }
+   466→}`,
+   467→        },
+   468→      },
+   469→      {
+   470→        heading: 'Template — attribute binding',
+   471→        body: 'Angular cannot set a bare attribute conditionally, so bind loading as a string attribute:',
+   472→        code: {
+   473→          lang: 'html',
+   474→          label: 'app.component.html',
+   475→          code: `<skeleton-screen
+   476→  [attr.loading]="loading ? '' : null"
+   477→  effect="shimmer"
+   478→  color="#e2e8f0"
+   479→  radius="12">
+   480→  <app-profile></app-profile>
+   481→</skeleton-screen>`,
+   482→        },
+   483→      },
+   484→      {
+   485→        heading: 'Imperative API in a service',
+   486→        code: {
+   487→          lang: 'typescript',
+   488→          code: `import { SkeletonLoader } from 'universal-skeleton';
+   489→
+   490→@Injectable({ providedIn: 'root' })
+   491→export class FeedService {
+   492→  load(target: HTMLElement) {
+   493→    return SkeletonLoader.while(
+   494→      this.http.get<Feed>('/api/feed'),
+   495→      target,
+   496→      { effect: 'fade' }
+   497→    );
+   498→  }
+   499→}`,
+   500→        },
+   501→      },
+   502→      {
+   503→        heading: 'Standalone components (v17+)',
+   504→        bullets: [
+   505→          'Add schemas: [CUSTOM_ELEMENTS_SCHEMA] to @Component({ … }) directly — the same declaration works for standalone and NgModule apps.',
+   506→        ],
+   507→      },
+   508→    ],
+   509→  },
+   510→  {
+   511→    slug: 'svelte',
+   512→    title: 'Svelte / SvelteKit',
+   513→    tag: 'Svelte 5',
+   514→    icon: Braces,
+   515→    intro:
+   516→      'Svelte treats any tag containing a dash as a custom element, so <skeleton-screen> works out of the box — in Svelte 4 and 5, in SPA and SvelteKit apps alike.',
+   517→    sections: [
+   518→      {
+   519→        heading: 'Install',
+   520→        code: { lang: 'bash', code: 'npm install universal-skeleton' },
+   521→      },
+   522→      {
+   523→        heading: 'Web Component in a component',
+   524→        code: {
+   525→          lang: 'html',
+   526→          label: 'Profile.svelte',
+   527→          code: `<script>
+   528→  import { onMount } from 'svelte';
+   529→  import 'universal-skeleton'; // registers the element in the browser
+   530→
+   531→  let loading = $state(true); // Svelte 5 runes — a plain let works in v4
+   532→
+   533→  onMount(async () => {
+   534→    await loadProfile();
+   535→    loading = false;
+   536→  });
+   537→</script>
+   538→
+   539→<skeleton-screen loading={loading ? '' : undefined} effect="bounce">
+   540→  <article class="profile">…</article>
+   541→</skeleton-screen>`,
+   542→        },
+   543→      },
+   544→      {
+   545→        heading: 'Imperative API + actions',
+   546→        body: 'A tiny Svelte action is the most idiomatic way to drive scan()/restore():',
+   547→        code: {
+   548→          lang: 'javascript',
+   549→          label: 'skeleton.action.js',
+   550→          code: `import { SkeletonLoader } from 'universal-skeleton';
+   551→
+   552→// A tiny Svelte action — the idiomatic way to drive scan()/restore()
+   553→export function skeleton(node, options = {}) {
+   554→  SkeletonLoader.scan(node, options);
+   555→  return {
+   556→    update(nextOptions) { SkeletonLoader.scan(node, nextOptions); },
+   557→    destroy() { SkeletonLoader.restore(node); },
+   558→  };
+   559→}
+   560→
+   561→// Usage:
+   562→// <div use:skeleton={{ effect: 'wave', duration: 1200 }}>…</div>`,
+   563→        },
+   564→      },
+   565→      {
+   566→        heading: 'SvelteKit notes',
+   567→        bullets: [
+   568→          'SSR renders the tag fine, but register it client-side: import "universal-skeleton" in a component with onMount or inside +layout.client.svelte.',
+   569→          'For load functions in +page.js, data already exists before render — skeletons shine for client-side navigation and streamed data.',
+   570→        ],
+   571→      },
+   572→    ],
+   573→  },
+   574→  {
+   575→    slug: 'lit',
+   576→    title: 'Lit & Web Component apps',
+   577→    tag: 'WC',
+   578→    icon: Radio,
+   579→    intro:
+   580→      'Because the library IS a Web Component, Lit apps can compose <skeleton-screen> inside their own templates — or extend the exported class to subclass it.',
+   581→    sections: [
+   582→      {
+   583→        heading: 'Use the element in a Lit template',
+   584→        code: {
+   585→          lang: 'javascript',
+   586→          label: 'my-card.js',
+   587→          code: `import { LitElement, html } from 'lit';
+   588→import 'universal-skeleton'; // registers <skeleton-screen>
+   589→
+   590→export class MyCard extends LitElement {
+   591→  static properties = { loading: { type: Boolean } };
+   592→
+   593→  constructor() {
+   594→    super();
+   595→    this.loading = true;
+   596→  }
+   597→
+   598→  render() {
+   599→    return html\`
+   600→      <!-- ?attr= sets the attribute when true, removes it when false -->
+   601→      <skeleton-screen ?loading=\${this.loading} effect="sheen">
+   602→        <slot></slot>
+   603→      </skeleton-screen>
+   604→    \`;
+   605→  }
+   606→}
+   607→customElements.define('my-card', MyCard);`,
+   608→        },
+   609→      },
+   610→      {
+   611→        heading: 'Subclass the component',
+   612→        code: {
+   613→          lang: 'javascript',
+   614→          code: `import { SkeletonScreen } from 'universal-skeleton';
+   615→
+   616→class LoadingCard extends SkeletonScreen {}
+   617→customElements.define('loading-card', LoadingCard);`,
+   618→        },
+   619→        bullets: [
+   620→          'The Web Component renders in light DOM — your slotted content is measured directly, no shadow DOM surprises.',
+   621→          'Note: one custom element class maps to one tag name; use registerSkeletonScreen("other-name") for extra aliases.',
+   622→        ],
+   623→      },
+   624→    ],
+   625→  },
+   626→  {
+   627→    slug: 'jquery',
+   628→    title: 'jQuery & legacy stacks',
+   629→    tag: 'No build',
+   630→    icon: History,
+   631→    intro:
+   632→      'Any page where you can add a script tag works: WordPress, Rails ERB, Django, Laravel Blade, JSP — the browser build has zero dependencies and needs no bundler.',
+   633→    sections: [
+   634→      {
+   635→        heading: 'Script tag + jQuery AJAX',
+   636→        code: {
+   637→          lang: 'html',
+   638→          label: 'page.html',
+   639→          code: `<script src="https://unpkg.com/universal-skeleton/dist/index.iife.min.js"></script>
+   640→<script>
+   641→  var loader = UniversalSkeleton.SkeletonLoader.scan('#legacy-panel', { effect: 'shimmer' });
+   642→
+   643→  $.get('/api/data')
+   644→    .done(function (data) {
+   645→      $('#legacy-panel').html(render(data));
+   646→    })
+   647→    .fail(function () {
+   648→      alert('failed — restoring UI anyway');
+   649→    })
+   650→    .always(function () {
+   651→      UniversalSkeleton.SkeletonLoader.restore('#legacy-panel');
+   652→    });
+   653→</script>`,
+   654→        },
+   655→      },
+   656→      {
+   657→        heading: 'Server-rendered lists (htmx, Rails, Django…)',
+   658→        body: 'For server templates there is no JS state to sync — just scan before a request and restore on completion, or use data attributes to fine-tune what gets skeletonized:',
+   659→        code: {
+   660→          lang: 'html',
+   661→          code: `<!-- Django / ERB / PHP template -->
+   662→<div id="list" hx-get="/items" hx-swap="innerHTML">
+   663→  {% for item in items %}
+   664→    <p data-skeleton="text">{{ item.title }}</p>  <!-- mirrors as text bars -->
+   665→  {% endfor %}
+   666→  <img src="{{ user.avatar }}" data-skeleton="circle" />
+   667→  <button data-skeleton="ignore">Skip me</button>
+   668→</div>`,
+   669→        },
+   670→      },
+   671→      {
+   672→        heading: 'Prefer the Web Component?',
+   673→        code: {
+   674→          lang: 'html',
+   675→          code: `<skeleton-screen loading>
+   676→  <?php include 'product-row.php'; ?>
+   677→</skeleton-screen>
+   678→<script>
+   679→  fetch('/api/stock').then(function () {
+   680→    document.querySelector('skeleton-screen').removeAttribute('loading');
+   681→  });
+   682→</script>`,
+   683→        },
+   684→      },
+   685→    ],
+   686→  },
+   687→  {
+   688→    slug: 'typescript',
+   689→    title: 'TypeScript',
+   690→    tag: '.d.ts',
+   691→    icon: Type,
+   692→    intro:
+   693→      'The package ships index.d.ts inside — install and you get typed options, handles and JSX support immediately. No @types package, no ambient setup.',
+   694→    sections: [
+   695→      {
+   696→        heading: 'Everything is typed out of the box',
+   697→        code: {
+   698→          lang: 'typescript',
+   699→          code: `import {
+   700→  SkeletonLoader,
+   701→  type SkeletonHandle,
+   702→  type SkeletonEffect,
+   703→  type SkeletonTheme,
+   704→  EFFECTS, // ['shimmer', 'wave', 'pulse', 'fade', 'blink', 'sheen', 'bounce', 'none']
+   705→  THEMES,  // ['light', 'dark', 'auto']
+   706→} from 'universal-skeleton';
+   707→
+   708→const handle: SkeletonHandle = SkeletonLoader.scan('#app', {
+   709→  effect: 'wave',          // only the 8 valid names compile
+   710→  theme: 'auto',           // 'light' | 'dark' | 'auto' — follows the OS by default
+   711→  duration: 900,           // string | number
+   712→  radius: 12,
+   713→  exclude: (el) => el.classList.contains('ads'),
+   714→});
+   715→
+   716→handle.setEffect('fade');  // autocompletes all effect names
+   717→handle.setTheme('dark');   // swap the palette at runtime
+   718→handle.destroy();`,
+   719→        },
+   720→      },
+   721→      {
+   722→        heading: 'The SkeletonOptions interface',
+   723→        code: {
+   724→          lang: 'typescript',
+   725→          code: `interface SkeletonOptions {
+   726→  effect?: SkeletonEffect;              // 'shimmer' | 'wave' | 'pulse' | 'fade' | 'blink' | 'sheen' | 'bounce' | 'none'
+   727→  theme?: SkeletonTheme;                // 'light' | 'dark' | 'auto' — auto follows prefers-color-scheme
+   728→  color?: string;                       // any CSS color — wins over the theme palette
+   729→  highlightColor?: string;
+   730→  duration?: string | number;           // '2s' or 900 (ms)
+   731→  radius?: number | null;
+   732→  exclude?: string | ((el: Element) => boolean);
+   733→  textLines?: boolean;                  // one bar per text line
+   734→  responsive?: boolean;                 // ResizeObserver rebuild
+   735→  blockInteraction?: boolean;           // block clicks while visible
+   736→  minDuration?: number;                 // while() only
+   737→}`,
+   738→        },
+   739→      },
+   740→      {
+   741→        heading: 'JSX typing for <skeleton-screen>',
+   742→        body: 'The bundled declarations cover classic JSX and React 19. If your setup does not pick them up (e.g. custom JSX runtime), declare the element once:',
+   743→        code: {
+   744→          lang: 'typescript',
+   745→          label: 'skeleton-screen.d.ts',
+   746→          code: `import 'universal-skeleton';
+   747→
+   748→declare module 'react' {
+   749→  namespace JSX {
+   750→    interface IntrinsicElements {
+   751→      'skeleton-screen': React.DetailedHTMLProps<
+   752→        React.HTMLAttributes<HTMLElement> & {
+   753→          loading?: boolean | string;
+   754→          effect?: SkeletonEffect;
+   755→          color?: string;
+   756→          'highlight-color'?: string;
+   757→          duration?: string | number;
+   758→          radius?: number | string;
+   759→        },
+   760→        HTMLElement
+   761→      >;
+   762→    }
+   763→  }
+   764→}`,
+   765→        },
+   766→      },
+   767→      {
+   768→        heading: 'tsconfig note',
+   769→        bullets: [
+   770→          'moduleResolution: "bundler" (recommended) or "node16"/"nodenext" resolve the exports map — both point to dist/index.esm.js + index.d.ts.',
+   771→          'The CJS build has matching types for Node/SSR tooling.',
+   772→        ],
+   773→      },
+   774→    ],
+   775→  },
+   776→  {
+   777→    slug: 'anywhere',
+   778→    title: 'Astro, Remix, Solid, htmx & more',
+   779→    tag: 'Universal',
+   780→    icon: FileCode2,
+   781→    intro:
+   782→      'If it renders HTML, it is supported. This page is the same recipe: one script tag (or import) + optional data-skeleton attributes.',
+   783→    sections: [
+   784→      {
+   785→        heading: 'Astro — script in the layout',
+   786→        code: {
+   787→          lang: 'astro',
+   788→          label: 'src/layouts/Base.astro',
+   789→          code: `---
+   790→// Astro processes <script> tags — import npm packages directly
+   791→import 'universal-skeleton';
+   792→---
+   793→<html>
+   794→  <body>
+   795→    <slot />
+   796→    <!-- boolean attribute with no value → skeleton until JS removes it -->
+   797→    <skeleton-screen loading effect="wave">
+   798→      <slot name="hero" />
+   799→    </skeleton-screen>
+   800→  </body>
+   801→</html>`,
+   802→        },
+   803→        bullets: [
+   804→          'Use is:inline or place the CDN <script src> in <head> to skip Astro bundling entirely.',
+   805→        ],
+   806→      },
+   807→      {
+   808→        heading: 'Remix / React Router',
+   809→        body: 'Same as the React guide — skeletons belong in client components (files under .client/ or components using useEffect).',
+   810→        code: {
+   811→          lang: 'tsx',
+   812→          code: `// app/routes/dashboard.tsx
+   813→import { json } from '@remix-run/node';
+   814→import { SkeletonLoader } from 'universal-skeleton';
+   815→
+   816→export async function clientLoader() {
+   817→  const data = await SkeletonLoader.while(
+   818→    fetch('/api/dashboard').then((r) => r.json()),
+   819→    '#dash',
+   820→    { effect: 'pulse', minDuration: 250 }
+   821→  );
+   822→  return json(data);
+   823→}`,
+   824→        },
+   825→      },
+   826→      {
+   827→        heading: 'Solid, preact, alpine…',
+   828→        bullets: [
+   829→          'Solid: use ref + onMount(() => SkeletonLoader.scan(ref, options)).',
+   830→          'Preact: identical to the React guide (custom elements are first-class there).',
+   831→          'Alpine.js: x-init="document.querySelector(&apos;skeleton-screen&apos;).removeAttribute(&apos;loading&apos;)" after fetching.',
+   832→        ],
+   833→      },
+   834→      {
+   835→        heading: 'htmx / Turbo / server-driven apps',
+   836→        body: 'Hook the request lifecycle events — scan before the request, restore when the DOM updates:',
+   837→        code: {
+   838→          lang: 'javascript',
+   839→          code: `document.body.addEventListener('htmx:beforeRequest', (e) => {
+   840→  UniversalSkeleton.SkeletonLoader.scan(e.target, { effect: 'sheen' });
+   841→});
+   842→document.body.addEventListener('htmx:afterSwap', (e) => {
+   843→  UniversalSkeleton.SkeletonLoader.restore(e.target);
+   844→});`,
+   845→        },
+   846→      },
+   847→    ],
+   848→  },
+   849→];
+   850→
+   851→export const GUIDE_INDEX = GUIDES.map(({ slug, title, tag }) => ({ slug, title, tag }));
+   852→

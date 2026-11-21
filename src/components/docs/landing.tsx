@@ -1,8 +1,15 @@
 'use client';
 
+/**
+ * Landing page — hero with a live skeleton loop, install box, stats,
+ * three live "how it works" demos, feature grid, effects teaser and CTA.
+ * Every demo follows the site theme (light/dark).
+ */
+
 import { useEffect, useRef, useState } from 'react';
 import {
   Accessibility,
+  ArrowRight,
   Boxes,
   FileCode2,
   Package,
@@ -16,15 +23,17 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { SkeletonLoader } from '@/lib/universal-skeleton/index.esm.mjs';
+import { SkeletonLoader, type SkeletonEffect } from '@/lib/universal-skeleton/index.esm.mjs';
 import { CodeBlock } from './code-block';
 import { ProfileCard, useSkeleton, useMounted } from './sample-card';
+import { useSiteTheme } from './use-site-theme';
 
 /* ------------------------------------------------------------------ */
 /* Hero — auto-toggling skeleton/real-UI loop built on the Web Component */
 /* ------------------------------------------------------------------ */
 
 function HeroDemo() {
+  const theme = useSiteTheme();
   const [loading, setLoading] = useState(true);
   const [variant, setVariant] = useState(0);
   // Render the custom element only after hydration: the library upgrades
@@ -55,13 +64,13 @@ function HeroDemo() {
         </span>
       </div>
       {/* The Web Component in its purest form: toggle one attribute.
-          theme="light" — this demo surface is always white. */}
+          theme follows the site toggle so light AND dark both look right. */}
       {mounted ? (
-        <skeleton-screen loading={loading ? '' : undefined} effect="shimmer" theme="light">
-          <ProfileCard variant={variant} />
+        <skeleton-screen loading={loading ? '' : undefined} effect="shimmer" theme={theme}>
+          <ProfileCard variant={variant} surface={theme} />
         </skeleton-screen>
       ) : (
-        <ProfileCard variant={variant} />
+        <ProfileCard variant={variant} surface={theme} />
       )}
     </div>
   );
@@ -105,16 +114,17 @@ function InstallBox() {
 /* ------------------------------------------------------------------ */
 
 function ScanDemo() {
+  const theme = useSiteTheme();
   const [active, setActive] = useState(true);
-  const ref = useSkeleton(active, () => ({ effect: 'shimmer', theme: 'light' }), []);
+  const ref = useSkeleton(active, () => ({ effect: 'shimmer', theme }), [theme]);
   return (
     <div>
-      <div ref={ref} className="rounded-xl bg-white p-4">
+      <div ref={ref} className="rounded-xl border border-border bg-card p-4 text-foreground">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-zinc-300" />
+          <div className="h-10 w-10 rounded-full bg-zinc-300 dark:bg-zinc-700" />
           <div className="flex-1">
-            <div className="h-3 w-28 rounded bg-zinc-200" />
-            <div className="mt-1.5 h-2.5 w-44 rounded bg-zinc-100" />
+            <div className="h-3 w-28 rounded bg-zinc-200 dark:bg-zinc-700" />
+            <div className="mt-1.5 h-2.5 w-44 rounded bg-zinc-200/70 dark:bg-zinc-700/60" />
           </div>
         </div>
       </div>
@@ -132,6 +142,7 @@ function ScanDemo() {
 }
 
 function WhileDemo() {
+  const theme = useSiteTheme();
   const ref = useRef<HTMLDivElement>(null);
   const [loadedAt, setLoadedAt] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -142,7 +153,7 @@ function WhileDemo() {
     SkeletonLoader.while(
       new Promise((resolve) => window.setTimeout(resolve, 1700)),
       ref.current,
-      { effect: 'fade', duration: 1100, theme: 'light' }
+      { effect: 'fade', duration: 1100, theme }
     ).then(() => {
       setLoadedAt(new Date().toLocaleTimeString());
       setBusy(false);
@@ -151,8 +162,8 @@ function WhileDemo() {
 
   return (
     <div>
-      <div ref={ref} className="rounded-xl bg-white p-4">
-        <p className="text-sm text-zinc-700 dark:text-zinc-200">
+      <div ref={ref} className="rounded-xl border border-border bg-card p-4 text-foreground">
+        <p className="text-sm leading-6">
           {loadedAt ? `Feed loaded at ${loadedAt}` : 'Click the button — skeleton covers the card while the promise runs.'}
         </p>
       </div>
@@ -171,16 +182,17 @@ function WhileDemo() {
 }
 
 function DataAttrDemo() {
+  const theme = useSiteTheme();
   const [active, setActive] = useState(true);
-  const ref = useSkeleton(active, () => ({ effect: 'bounce', theme: 'light' }), []);
+  const ref = useSkeleton(active, () => ({ effect: 'bounce', theme }), [theme]);
   return (
     <div>
-      <div ref={ref} className="rounded-xl bg-white p-4">
+      <div ref={ref} className="rounded-xl border border-border bg-card p-4 text-foreground">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-amber-200" data-skeleton="circle" />
-          <div className="h-10 flex-1 rounded-lg bg-violet-100" data-skeleton="rect" data-skeleton-radius="10" />
+          <div className="h-10 w-10 rounded-full bg-amber-200 dark:bg-amber-900" data-skeleton="circle" />
+          <div className="h-10 flex-1 rounded-lg bg-violet-100 dark:bg-violet-950" data-skeleton="rect" data-skeleton-radius="10" />
         </div>
-        <p className="mt-3 text-xs text-zinc-500">data-skeleton=&quot;circle&quot; / &quot;rect&quot;</p>
+        <p className="mt-3 text-xs text-muted-foreground">data-skeleton=&quot;circle&quot; / &quot;rect&quot;</p>
       </div>
       <Button
         size="sm"
@@ -192,6 +204,81 @@ function DataAttrDemo() {
         {active ? 'restore()' : 'scan()'}
       </Button>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Effects teaser — four live mini surfaces                             */
+/* ------------------------------------------------------------------ */
+
+const TEASER_EFFECTS: SkeletonEffect[] = ['shimmer', 'wave', 'fade', 'bounce'];
+
+function EffectsTeaser({ onNavigate }: { onNavigate?: (route: string) => void }) {
+  const theme = useSiteTheme();
+  const [seed, setSeed] = useState(0);
+  const ref0 = useRef<HTMLDivElement>(null);
+  const ref1 = useRef<HTMLDivElement>(null);
+  const ref2 = useRef<HTMLDivElement>(null);
+  const ref3 = useRef<HTMLDivElement>(null);
+  const refs = [ref0, ref1, ref2, ref3];
+
+  useEffect(() => {
+    const handles = refs.map((r, i) => {
+      const el = r.current;
+      if (!el) return null;
+      return SkeletonLoader.scan(el, { effect: TEASER_EFFECTS[i], theme, duration: 1600 });
+    });
+    return () => handles.forEach((h) => h?.destroy());
+  }, [theme, seed]);
+
+  const miniContent = (
+    <div className="rounded-xl border border-border bg-card p-3.5 text-foreground">
+      <div className="flex items-center gap-2.5">
+        <div className="h-8 w-8 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+        <div className="flex-1">
+          <div className="h-2.5 w-24 rounded bg-zinc-200 dark:bg-zinc-700" />
+          <div className="mt-1 h-2 w-16 rounded bg-zinc-200/70 dark:bg-zinc-700/60" />
+        </div>
+      </div>
+      <div className="mt-2.5 space-y-1.5">
+        <div className="h-2 w-full rounded bg-zinc-200 dark:bg-zinc-700" />
+        <div className="h-2 w-2/3 rounded bg-zinc-200 dark:bg-zinc-700" />
+      </div>
+    </div>
+  );
+
+  return (
+    <section>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold text-foreground">Eight effects, one option</h2>
+          <p className="mt-2 max-w-2xl text-muted-foreground">
+            shimmer, wave, pulse, fade, blink, sheen, bounce — or none. Pure CSS on the same scanned
+            skeleton, switchable at runtime.
+          </p>
+        </div>
+        <Button variant="outline" onClick={() => onNavigate?.('docs/effects')}>
+          Explore all effects
+          <ArrowRight className="ml-1.5 h-4 w-4" />
+        </Button>
+      </div>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {TEASER_EFFECTS.map((e, i) => (
+          <div key={e} className="rounded-2xl border border-border bg-card/50 p-3.5">
+            <div className="flex items-center justify-between px-1 pb-2.5">
+              <span className="font-mono text-xs font-semibold text-emerald-600 dark:text-emerald-400">{e}</span>
+              <button
+                onClick={() => setSeed((s) => s + 1)}
+                className="text-[11px] text-muted-foreground/70 transition-colors hover:text-foreground"
+              >
+                rescan
+              </button>
+            </div>
+            <div ref={refs[i]}>{miniContent}</div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -221,7 +308,7 @@ const STATS = [
   { icon: Boxes, value: '18+', label: 'stacks it works with' },
 ];
 
-export function Landing({ onNavigate }: { onNavigate?: (view: string) => void }) {
+export function Landing({ onNavigate }: { onNavigate?: (route: string) => void }) {
   return (
     <div className="space-y-20">
       {/* Hero */}
@@ -246,9 +333,9 @@ export function Landing({ onNavigate }: { onNavigate?: (view: string) => void })
             <Button
               size="lg"
               className="bg-emerald-600 text-white hover:bg-emerald-500"
-              onClick={() => onNavigate?.('guides')}
+              onClick={() => onNavigate?.('docs/introduction')}
             >
-              Read the guides
+              Read the docs
             </Button>
             <Button
               size="lg"
@@ -300,6 +387,9 @@ export function Landing({ onNavigate }: { onNavigate?: (view: string) => void })
         </div>
       </section>
 
+      {/* Effects teaser */}
+      <EffectsTeaser onNavigate={onNavigate} />
+
       {/* Features */}
       <section>
         <h2 className="text-2xl font-semibold text-foreground">Everything included</h2>
@@ -328,6 +418,31 @@ export function Landing({ onNavigate }: { onNavigate?: (view: string) => void })
             </span>
           ))}
         </div>
+      </section>
+
+      {/* CTA band */}
+      <section className="rounded-3xl border border-border bg-muted/40 px-6 py-10 text-center sm:px-10">
+        <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">
+          Ship loaders that fit your UI — not grey boxes that don&apos;t.
+        </h2>
+        <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
+          One install, one attribute, every framework. Start with the quick start — the first
+          skeleton takes about a minute.
+        </p>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <Button
+            size="lg"
+            className="bg-emerald-600 text-white hover:bg-emerald-500"
+            onClick={() => onNavigate?.('docs/quick-start')}
+          >
+            Get started
+            <ArrowRight className="ml-1.5 h-4 w-4" />
+          </Button>
+          <Button size="lg" variant="outline" onClick={() => onNavigate?.('docs/installation')}>
+            Installation
+          </Button>
+        </div>
+        <p className="mt-5 font-mono text-xs text-muted-foreground">npm install universal-skeleton</p>
       </section>
     </div>
   );
