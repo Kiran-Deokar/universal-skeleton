@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Angular guide — universal-skeleton</title>
+<link rel="stylesheet" href="../assets/site.css" />
+<script src="../../dist/index.iife.min.js"></script>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="inner">
+    <a class="logo" href="../index.html"><code>universal-skeleton</code></a>
+    <div class="links">
+      <a href="../index.html">Home</a>
+      <a href="../api.html">API</a>
+      <a href="../index.html#guides">Guides</a>
+      <a href="../../demo/index.html">Playground</a>
+    </div>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar">
+    <h4>Guides</h4>
+    <ul>
+      <li><a href="vanilla.html">Vanilla JS / CDN</a></li>
+      <li><a href="react.html">React &amp; Next.js</a></li>
+      <li><a href="vue.html">Vue 3 &amp; Nuxt</a></li>
+      <li><a href="angular.html" class="on">Angular</a></li>
+      <li><a href="svelte.html">Svelte &amp; SvelteKit</a></li>
+      <li><a href="lit.html">Lit &amp; Web Components</a></li>
+      <li><a href="jquery.html">jQuery &amp; legacy</a></li>
+      <li><a href="../api.html">API reference</a></li>
+    </ul>
+  </aside>
+
+  <article class="doc">
+    <h1>Angular</h1>
+    <p class="lede">Angular gives you two clean hooks: <code>ngAfterViewInit</code> to scan (the view exists and has real geometry) and <code>DestroyRef</code> to clean up. No zone or renderer tricks required.</p>
+
+    <h2 id="install">Install</h2>
+    <pre><code>npm install universal-skeleton</code></pre>
+    <p>Works with standalone components, NgModules, Angular 14+ and the latest majors. TypeScript types included.</p>
+
+    <h2 id="lifecycle">Scan in AfterViewInit, clean up with DestroyRef</h2>
+    <pre><code>import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, inject } from '@angular/core';
+import { SkeletonLoader } from 'universal-skeleton';
+
+type SkeletonHandle = ReturnType&lt;typeof SkeletonLoader.scan&gt;;
+
+@Component({
+  selector: 'app-profile',
+  standalone: true,
+  template: `
+    &lt;section #card&gt;
+      &lt;!-- your real markup; render the empty/loading state here --&gt;
+      &lt;h2&gt;Loading profile…&lt;/h2&gt;
+    &lt;/section&gt;
+  `,
+})
+export class ProfileComponent implements AfterViewInit, OnDestroy {
+  @ViewChild('card') card!: ElementRef&lt;HTMLElement&gt;;
+  private handle: SkeletonHandle | null = null;
+  private destroyRef = inject(DestroyRef);
+
+  ngAfterViewInit() {
+    this.handle = SkeletonLoader.scan(this.card.nativeElement, {
+      effect: 'shimmer',
+      theme: 'auto',
+    });
+    this.load();
+
+    this.destroyRef.onDestroy(() =&gt; this.handle?.destroy());
+  }
+
+  private load() {
+    this.api.getProfile().subscribe({
+      next: (profile) =&gt; { this.profile = profile; },
+      complete: () =&gt; { this.handle?.destroy(); this.handle = null; },
+    });
+  }
+
+  ngOnDestroy() { this.handle?.destroy(); }
+}</code></pre>
+    <p>Prefer <code>DestroyRef</code> (or <code>ngOnDestroy</code>) — the overlay must not outlive the view.</p>
+
+    <h2 id="while">while() with HttpClient</h2>
+    <p>Turn the observable into a promise and let the library manage the skeleton:</p>
+    <pre><code>import { firstValueFrom } from 'rxjs';
+
+async load() {
+  const profile = await SkeletonLoader.while(
+    firstValueFrom(this.api.getProfile()),
+    this.card.nativeElement,
+    { effect: 'pulse', minDuration: 400 },
+  );
+  this.profile = profile;   // skeleton already removed
+}</code></pre>
+
+    <h2 id="signals">Signals / zoneless notes</h2>
+    <ul>
+      <li><code>scan()</code> is plain DOM work — it runs fine outside Angular change detection and does not need <code>runOutsideAngular</code>.</li>
+      <li>In zoneless apps (experimental <code>provideZonelessChangeDetection()</code>), nothing changes: scan in <code>ngAfterViewInit</code>, destroy when data arrives.</li>
+      <li>For signal-based re-scans, wrap <code>handle.update()</code> in <code>afterRenderEffect</code> or call it when your list length signal changes.</li>
+    </ul>
+
+    <h2 id="web-component">The &lt;skeleton-screen&gt; element</h2>
+    <p>Add <code>CUSTOM_ELEMENTS_SCHEMA</code> once per component (or globally), then use the element in templates:</p>
+    <pre><code>import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+
+@Component({
+  selector: 'app-product',
+  standalone: true,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  template: `
+    &lt;skeleton-screen [attr.loading]="loading ? '' : null" effect="wave"&gt;
+      &lt;article class="product"&gt;…&lt;/article&gt;
+    &lt;/skeleton-screen&gt;
+  `,
+})</code></pre>
+    <div class="callout">
+      Angular binds custom-element attributes as strings. <code>[attr.loading]="loading ? '' : null"</code> adds the attribute while loading and removes it after — the component re-syncs on every change.
+    </div>
+
+    <h2 id="universal">Angular Universal / SSR</h2>
+    <ul>
+      <li>Importing the package on the server is safe — style injection and element registration are guarded when <code>HTMLElement</code> is missing.</li>
+      <li><code>ngAfterViewInit</code> and <code>ngOnDestroy</code> run in the browser for client-hydrated views, so the pattern above is SSR-safe without platform checks.</li>
+      <li>If a component is rendered server-side only (API transfers state), you never scan it — perfect: the skeleton only appears during real client loading.</li>
+    </ul>
+
+    <h2 id="gotchas">Gotchas</h2>
+    <ul>
+      <li><b>Scan in AfterViewInit, not ngOnInit.</b> At init the view is not rendered; geometry would be zero.</li>
+      <li><b>*ngIf swaps.</b> If <code>*ngIf</code> removes the scanned node, the overlay disappears with it — destroy the handle to stay consistent, or scan a wrapper that always stays.</li>
+      <li><b>Dynamic lists.</b> Rows added after the scan need <code>handle.update()</code> — call it in <code>ngAfterViewChecked</code> guarded by a length check, or on the data event.</li>
+      <li><b>Route changes.</b> Destroy on component teardown (shown above) — handles are per-element and never global.</li>
+    </ul>
+
+    <p class="toc-hint">
+      <span>&larr; <a href="vue.html">Vue 3 &amp; Nuxt</a></span>
+      <span><a href="svelte.html">Next: Svelte &amp; SvelteKit &rarr;</a></span>
+    </p>
+  </article>
+</div>
+
+<footer class="site-footer">
+  universal-skeleton v1.1.0 &middot; MIT License &middot; zero dependencies &middot; works anywhere a DOM exists
+</footer>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

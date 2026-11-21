@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vanilla JS &amp; CDN guide — universal-skeleton</title>
+<link rel="stylesheet" href="../assets/site.css" />
+<script src="../../dist/index.iife.min.js"></script>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="inner">
+    <a class="logo" href="../index.html"><code>universal-skeleton</code></a>
+    <div class="links">
+      <a href="../index.html">Home</a>
+      <a href="../api.html">API</a>
+      <a href="../index.html#guides">Guides</a>
+      <a href="../../demo/index.html">Playground</a>
+    </div>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar">
+    <h4>Guides</h4>
+    <ul>
+      <li><a href="vanilla.html" class="on">Vanilla JS / CDN</a></li>
+      <li><a href="react.html">React &amp; Next.js</a></li>
+      <li><a href="vue.html">Vue 3 &amp; Nuxt</a></li>
+      <li><a href="angular.html">Angular</a></li>
+      <li><a href="svelte.html">Svelte &amp; SvelteKit</a></li>
+      <li><a href="lit.html">Lit &amp; Web Components</a></li>
+      <li><a href="jquery.html">jQuery &amp; legacy</a></li>
+      <li><a href="../api.html">API reference</a></li>
+    </ul>
+  </aside>
+
+  <article class="doc">
+    <h1>Vanilla JS &amp; CDN</h1>
+    <p class="lede">No framework, no build step — one script tag and one function call. This is the quickest way to see the library working, and every other guide builds on the same three ideas.</p>
+
+    <h2 id="install">Install</h2>
+    <h3>Option A — CDN script tag (zero setup)</h3>
+    <pre><code>&lt;script src="https://unpkg.com/universal-skeleton/dist/index.iife.min.js"&gt;&lt;/script&gt;
+&lt;!-- or jsDelivr: https://cdn.jsdelivr.net/npm/universal-skeleton/dist/index.iife.min.js --&gt;</code></pre>
+    <p>This registers the global <code>UniversalSkeleton</code> and injects the stylesheet automatically. Nothing runs until you call it.</p>
+
+    <h3>Option B — npm with a bundler</h3>
+    <pre><code>npm install universal-skeleton</code></pre>
+    <pre><code>import { SkeletonLoader } from 'universal-skeleton';
+// CommonJS works too: const { SkeletonLoader } = require('universal-skeleton');</code></pre>
+
+    <h2 id="first">Your first skeleton</h2>
+    <p>Take any real markup — this page never needs placeholder HTML. Then scan it:</p>
+    <pre><code>&lt;div id="card"&gt;
+  &lt;h2&gt;Ada Lovelace&lt;/h2&gt;
+  &lt;p&gt;First programmer in history.&lt;/p&gt;
+  &lt;button&gt;Follow&lt;/button&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+  const handle = UniversalSkeleton.SkeletonLoader.scan('#card');
+  // …data arrives / view is ready:
+  // handle.destroy();
+&lt;/script&gt;</code></pre>
+    <p>The scan measures the heading, paragraph and button, then paints matching grey blocks on top: per-line pill bars for text, a rounded rect for the button. The real content stays in the DOM underneath — it is only hidden by CSS while the skeleton shows.</p>
+
+    <h2 id="async">Loading data with while()</h2>
+    <p>The most common loop — skeleton while fetching, restore automatically, even on error:</p>
+    <pre><code>const { SkeletonLoader } = UniversalSkeleton;
+
+const posts = await SkeletonLoader.while(
+  fetch('/api/posts').then(r =&gt; r.json()),
+  '#post-list',
+  { effect: 'fade', minDuration: 600 }
+);
+renderPosts(posts);   // skeleton already removed at this point</code></pre>
+    <ul>
+      <li><code>minDuration</code> keeps the skeleton on screen at least that long so fast responses do not flash.</li>
+      <li>If the promise rejects, the skeleton is still removed and the error propagates normally.</li>
+    </ul>
+
+    <h2 id="manual">Fine-tune with data attributes</h2>
+    <p>Add attributes directly in your HTML where the automatic guess needs help:</p>
+    <pre><code>&lt;img src="me.jpg" class="avatar" <b>data-skeleton="circle"</b>&gt;
+&lt;!-- ↑ a round image becomes a circle block --&gt;
+
+&lt;div class="chart" <b>data-skeleton="rect"</b> <b>data-skeleton-radius="12"</b>&gt;
+  &lt;!-- whole chart becomes ONE rounded block, children skipped --&gt;
+&lt;/div&gt;
+
+&lt;span class="live-badge" <b>data-skeleton-ignore</b>&gt;LIVE&lt;/span&gt;
+&lt;!-- ↑ stays fully visible while everything around it skeletons --&gt;
+
+&lt;div <b>data-skeleton-color</b>="#c7d2fe"&gt;…&lt;/div&gt;</code></pre>
+    <p>See the <a href="../api.html#data-attributes">API reference</a> for the full list: <code>circle</code>, <code>rect</code>, <code>text</code>, <code>none</code>, <code>ignore</code> plus <code>-radius</code>, <code>-color</code>, <code>-highlight</code>.</p>
+
+    <h2 id="effects">Pick an effect &amp; theme</h2>
+    <pre><code>SkeletonLoader.scan('#card', {
+  effect: 'wave',    // shimmer | wave | pulse | fade | blink | sheen | bounce | none
+  theme: 'auto',     // light | dark | auto — auto follows the OS
+  duration: 1200,    // ms per cycle
+});
+
+// switch at runtime, no rebuild:
+handle.setEffect('pulse');
+handle.setTheme('dark');</code></pre>
+    <p>Global theming is pure CSS — set the variables once and every skeleton follows:</p>
+    <pre><code>:root {
+  --usk-color: #e5e7eb;
+  --usk-highlight: #f3f4f6;
+  --usk-radius: 8px;
+  --usk-duration: 1.4s;
+}</code></pre>
+
+    <h2 id="web-component">The Web Component alternative</h2>
+    <p>When you already know a region will load late, declare it instead of scanning:</p>
+    <pre><code>&lt;skeleton-screen loading effect="shimmer"&gt;
+  &lt;!-- your real markup lives here, untouched --&gt;
+  &lt;h2&gt;Order #1042&lt;/h2&gt;
+  &lt;p&gt;Ships tomorrow&lt;/p&gt;
+&lt;/skeleton-screen&gt;
+
+&lt;script&gt;
+  // toggle with one attribute — no JS needed:
+  //   skeletonScreenEl.removeAttribute('loading')
+&lt;/script&gt;</code></pre>
+
+    <h2 id="gotchas">Gotchas worth knowing</h2>
+    <ul>
+      <li><b>Scan after layout.</b> Elements need real dimensions. Call <code>scan()</code> after the DOM is parsed and visible — e.g. on <code>DOMContentLoaded</code> or right before an Ajax call.</li>
+      <li><b>Hidden elements are skipped.</b> Anything <code>display:none</code> at scan time produces no blocks; call <code>handle.update()</code> after you show it.</li>
+      <li><b>Resizes are handled.</b> With the default <code>responsive: true</code>, a ResizeObserver rebuilds blocks when the card changes size.</li>
+      <li><b>Reduced motion.</b> Every effect is disabled under <code>prefers-reduced-motion: reduce</code> — nothing to configure.</li>
+      <li><b>Multiple scans are safe.</b> Scanning the same target twice replaces the previous skeleton.</li>
+    </ul>
+
+    <p class="toc-hint">
+      <span>&larr; <a href="../api.html">API reference</a></span>
+      <span><a href="react.html">Next: React &amp; Next.js &rarr;</a></span>
+    </p>
+  </article>
+</div>
+
+<footer class="site-footer">
+  universal-skeleton v1.1.0 &middot; MIT License &middot; zero dependencies &middot; works anywhere a DOM exists
+</footer>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

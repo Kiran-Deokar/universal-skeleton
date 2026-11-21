@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>jQuery &amp; legacy pages guide — universal-skeleton</title>
+<link rel="stylesheet" href="../assets/site.css" />
+<script src="../../dist/index.iife.min.js"></script>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="inner">
+    <a class="logo" href="../index.html"><code>universal-skeleton</code></a>
+    <div class="links">
+      <a href="../index.html">Home</a>
+      <a href="../api.html">API</a>
+      <a href="../index.html#guides">Guides</a>
+      <a href="../../demo/index.html">Playground</a>
+    </div>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar">
+    <h4>Guides</h4>
+    <ul>
+      <li><a href="vanilla.html">Vanilla JS / CDN</a></li>
+      <li><a href="react.html">React &amp; Next.js</a></li>
+      <li><a href="vue.html">Vue 3 &amp; Nuxt</a></li>
+      <li><a href="angular.html">Angular</a></li>
+      <li><a href="svelte.html">Svelte &amp; SvelteKit</a></li>
+      <li><a href="lit.html">Lit &amp; Web Components</a></li>
+      <li><a href="jquery.html" class="on">jQuery &amp; legacy</a></li>
+      <li><a href="../api.html">API reference</a></li>
+    </ul>
+  </aside>
+
+  <article class="doc">
+    <h1>jQuery &amp; legacy pages</h1>
+    <p class="lede">Server-rendered pages, jQuery <code>$.ajax</code> flows, old SPA codebases — anywhere jQuery manipulates the DOM, the skeleton drops in with one script tag. No build step, no transpilation, ES5-friendly usage.</p>
+
+    <h2 id="install">Install</h2>
+    <pre><code>&lt;!-- before your own scripts --&gt;
+&lt;script src="https://unpkg.com/universal-skeleton/dist/index.iife.min.js"&gt;&lt;/script&gt;</code></pre>
+    <p>This defines <code>window.UniversalSkeleton</code>. Everything below uses ES5 syntax on purpose, so it runs on the same browsers your legacy code targets (IE11 excluded — custom elements require a modern browser).</p>
+
+    <h2 id="ajax">Skeleton around a jQuery Ajax call</h2>
+    <pre><code>var SkeletonLoader = window.UniversalSkeleton.SkeletonLoader;
+var $list = $('#user-list');
+
+function loadUsers() {
+  SkeletonLoader.scan($list[0], { effect: 'shimmer', theme: 'light' });
+
+  $.get('/api/users')
+    .done(function (users) {
+      renderUserRows($list, users);   // your existing render code
+    })
+    .fail(function () {
+      showErrorBanner();
+    })
+    .always(function () {
+      SkeletonLoader.restore($list[0]);
+    });
+}</code></pre>
+    <p>Pass the raw DOM node (<code>$list[0]</code>) or a plain selector string (<code>'#user-list'</code>) — both are accepted.</p>
+
+    <h2 id="promise">Promise-style with while()</h2>
+    <pre><code>SkeletonLoader.while(
+  $.ajax({ url: '/api/orders', dataType: 'json' }).promise(),
+  '#orders',
+  { minDuration: 400, effect: 'pulse' }
+).then(function (orders) {
+  renderOrders(orders);
+});</code></pre>
+    <p>jQuery's <code>.promise()</code> is a real ES Promise in modern jQuery (2.1+), so it plugs straight in. On older stacks, use the scan/restore pattern above instead.</p>
+
+    <h2 id="page-load">Skeleton on first page load</h2>
+    <p>For server-rendered pages, mark regions that hydrate late with the Web Component — it works during HTML parsing, before any JS of yours runs:</p>
+    <pre><code>&lt;skeleton-screen loading effect="shimmer"&gt;
+  &lt;div id="dashboard"&gt;
+    &lt;!-- server-rendered content --&gt;
+  &lt;/div&gt;
+&lt;/skeleton-screen&gt;
+
+&lt;script&gt;
+  $(function () {
+    // after your init code finishes:
+    $('skeleton-screen#dash').removeAttr('loading');
+  });
+&lt;/script&gt;</code></pre>
+
+    <h2 id="turbolinks">Turbolinks / pjax / multi-page apps</h2>
+    <ul>
+      <li>Scan on <code>page:before-fetch</code> / before the pjax request starts.</li>
+      <li>Restore on the matching <code>page:load</code> / success event.</li>
+      <li>Because handles are per-element, a page navigation that swaps the body removes any overlay with it — no leaks.</li>
+    </ul>
+
+    <h2 id="gotchas">Gotchas</h2>
+    <ul>
+      <li><b>Scan after the markup exists.</b> Inside <code>$(function () { … })</code> or right before an Ajax call — never at script top-level.</li>
+      <li><b>Scan the final geometry.</b> If jQuery code hides/shows panels during init, finish those mutations first, then scan; or call <code>handle.update()</code> after they change.</li>
+      <li><b>IE11 and old Edge.</b> Web Components features need modern browsers; on IE11 the CDN script itself loads but <code>&lt;skeleton-screen&gt;</code> will not upgrade. The <code>scan()</code> API also relies on <code>WeakMap</code>/<code>ResizeObserver</code> — for true legacy support ship a polyfill or stick to modern targets.</li>
+      <li><b>Multiple containers.</b> One handle per element — loop over the jQuery set and scan each node:</li>
+    </ul>
+    <pre><code>$('.lazy-panel').each(function () {
+  SkeletonLoader.scan(this, { effect: 'fade' });
+});</code></pre>
+
+    <p class="toc-hint">
+      <span>&larr; <a href="lit.html">Lit &amp; Web Components</a></span>
+      <span><a href="../api.html">Full API reference &rarr;</a></span>
+    </p>
+  </article>
+</div>
+
+<footer class="site-footer">
+  universal-skeleton v1.1.0 &middot; MIT License &middot; zero dependencies &middot; works anywhere a DOM exists
+</footer>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

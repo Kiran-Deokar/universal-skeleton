@@ -49,6 +49,8 @@ Works everywhere. **One package, any language, any framework:**
 - [Local development](#local-development)
 - [Publishing your own copy](#publishing-your-own-copy)
 
+> Full documentation ships in [`docs/`](docs/index.html) — a landing page with live examples, per-framework integration guides ([vanilla](docs/guides/vanilla.html) · [React](docs/guides/react.html) · [Vue](docs/guides/vue.html) · [Angular](docs/guides/angular.html) · [Svelte](docs/guides/svelte.html) · [Lit](docs/guides/lit.html) · [jQuery](docs/guides/jquery.html)) and a complete [API reference](docs/api.html).
+
 ## Install
 
 ```bash
@@ -77,7 +79,7 @@ Everything is exposed on the global `UniversalSkeleton` object. As an ES module 
 import { SkeletonLoader } from 'https://cdn.jsdelivr.net/npm/universal-skeleton/+esm';
 ```
 
-Pin a version for production: `universal-skeleton@1.0.0/dist/index.iife.min.js`.
+Pin a version for production: `universal-skeleton@1.1.0/dist/index.iife.min.js`.
 
 ## 30-second quick start
 
@@ -461,11 +463,12 @@ git clone https://github.com/your-username/universal-skeleton
 cd universal-skeleton
 npm install
 npm run build      # builds ESM + CJS + CDN (iife) + css into dist/
-npm test           # vitest unit tests (28 tests)
+npm test           # vitest unit tests (41 tests)
 npm run demo       # serve demo/ playground, open the printed URL
 ```
 
 Open `demo/index.html` directly in a browser too — it works from `file://` after a build.
+The documentation site in `docs/` also works from `file://` (e.g. `open docs/index.html`); its pages load `dist/` by relative path, so run `npm run build` first.
 
 ## Publishing your own copy
 

@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vue 3 &amp; Nuxt guide — universal-skeleton</title>
+<link rel="stylesheet" href="../assets/site.css" />
+<script src="../../dist/index.iife.min.js"></script>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="inner">
+    <a class="logo" href="../index.html"><code>universal-skeleton</code></a>
+    <div class="links">
+      <a href="../index.html">Home</a>
+      <a href="../api.html">API</a>
+      <a href="../index.html#guides">Guides</a>
+      <a href="../../demo/index.html">Playground</a>
+    </div>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar">
+    <h4>Guides</h4>
+    <ul>
+      <li><a href="vanilla.html">Vanilla JS / CDN</a></li>
+      <li><a href="react.html">React &amp; Next.js</a></li>
+      <li><a href="vue.html" class="on">Vue 3 &amp; Nuxt</a></li>
+      <li><a href="angular.html">Angular</a></li>
+      <li><a href="svelte.html">Svelte &amp; SvelteKit</a></li>
+      <li><a href="lit.html">Lit &amp; Web Components</a></li>
+      <li><a href="jquery.html">jQuery &amp; legacy</a></li>
+      <li><a href="../api.html">API reference</a></li>
+    </ul>
+  </aside>
+
+  <article class="doc">
+    <h1>Vue 3 &amp; Nuxt</h1>
+    <p class="lede">A template ref plus the <code>onMounted</code> / <code>onBeforeUnmount</code> pair is all the wiring Vue needs. Works the same in <code>&lt;script setup&gt;</code>, Options API and Nuxt 3.</p>
+
+    <h2 id="install">Install</h2>
+    <pre><code>npm install universal-skeleton</code></pre>
+    <p>TypeScript types are included; no extra packages.</p>
+
+    <h2 id="composition">&lt;script setup&gt; — scan on mount, destroy on unmount</h2>
+    <pre><code>&lt;script setup lang="ts"&gt;
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { SkeletonLoader } from 'universal-skeleton';
+
+const card = ref&lt;HTMLElement | null&gt;(null);
+let handle: ReturnType&lt;typeof SkeletonLoader.scan&gt; | null = null;
+
+onMounted(() =&gt; {
+  if (!card.value) return;
+  handle = SkeletonLoader.scan(card.value, { effect: 'fade', theme: 'auto' });
+  loadUser();
+});
+
+onBeforeUnmount(() =&gt; {
+  handle?.destroy();
+  handle = null;
+});
+
+async function loadUser() {
+  const user = await SkeletonLoader.while(
+    fetch(`/api/users/${id}`).then(r =&gt; r.json()),
+    card.value!,                       // while() re-scans; the old overlay is replaced
+    { minDuration: 500, effect: 'fade' },
+  );
+  // skeleton already removed — assign data
+}
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;section ref="card"&gt;
+    &lt;!-- your real markup; render your empty/loading state here --&gt;
+    &lt;h2&gt;Loading…&lt;/h2&gt;
+  &lt;/section&gt;
+&lt;/template&gt;</code></pre>
+    <div class="callout">
+      You do not need both patterns at once. Prefer <b>one</b>: either <code>scan()</code> + explicit destroy, or <code>while()</code> around the promise. If you use <code>while()</code>, drop the manual <code>handle</code> bookkeeping and keep only <code>onBeforeUnmount</code> cleanup via <code>SkeletonLoader.restore(card.value)</code>.
+    </div>
+
+    <h2 id="options-api">Options API</h2>
+    <pre><code>export default {
+  mounted() {
+    this.handle = SkeletonLoader.scan(this.$refs.card, { effect: 'shimmer' });
+  },
+  beforeUnmount() {
+    this.handle?.destroy();
+  },
+};</code></pre>
+
+    <h2 id="web-component">The &lt;skeleton-screen&gt; element</h2>
+    <p>Vue 3 handles custom elements natively. Configure the compiler once (vue-loader / Vite plugin) so unknown tags skip attribute casting:</p>
+    <pre><code>// vite.config.ts
+export default defineConfig({
+  plugins: [vue()],
+  compilerOptions: {
+    isCustomElement: (tag) =&gt; tag === 'skeleton-screen',
+  },
+});</code></pre>
+    <pre><code>&lt;skeleton-screen :loading="loading ? '' : null" effect="pulse"&gt;
+  &lt;article class="product"&gt;…&lt;/article&gt;
+&lt;/skeleton-screen&gt;</code></pre>
+    <p>With <code>isCustomElement</code> configured you can also pass booleans directly: <code>:loading="loading"</code> works because Vue sets the attribute for custom elements.</p>
+
+    <h2 id="nuxt">Nuxt 3</h2>
+    <ul>
+      <li><b>SSR:</b> importing the package on the server is safe — it is guarded. Scanning needs the DOM, so it belongs in lifecycle hooks which only run client-side.</li>
+      <li>For components you want excluded from SSR entirely, wrap in <code>&lt;ClientOnly&gt;</code>; the <code>onMounted</code> pattern above works either way.</li>
+      <li>Auto-imports: put the import in the component (or re-export from a composable) — <code>universal-skeleton</code> is not auto-imported by default.</li>
+    </ul>
+
+    <h2 id="gotchas">Gotchas</h2>
+    <ul>
+      <li><b>Template refs need the DOM.</b> Scan in <code>onMounted</code>, never at setup top-level — the element does not exist yet during SSR or hydration.</li>
+      <li><b><code>v-if</code> swaps destroy the node.</b> If the scanned element is removed by <code>v-if</code>, the overlay goes with it — Vue's cleanup handles the handle; scanning a stable wrapper element avoids churn.</li>
+      <li><b>Reactive lists.</b> When rows render after the scan (async list), call <code>handle.update()</code> in a <code>watch</code> on the list length, or scan again.</li>
+      <li><b>Keepalive.</b> With <code>&lt;KeepAlive&gt;</code>, re-scan in <code>onActivated</code> if the cached component should re-show a skeleton.</li>
+    </ul>
+
+    <p class="toc-hint">
+      <span>&larr; <a href="react.html">React &amp; Next.js</a></span>
+      <span><a href="angular.html">Next: Angular &rarr;</a></span>
+    </p>
+  </article>
+</div>
+
+<footer class="site-footer">
+  universal-skeleton v1.1.0 &middot; MIT License &middot; zero dependencies &middot; works anywhere a DOM exists
+</footer>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>
