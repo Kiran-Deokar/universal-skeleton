@@ -66,7 +66,7 @@ function EffectSurface({ effect, duration, color, highlight, radius, seed }: {
           <div className="h-3 w-28 rounded bg-zinc-200" />
           <div className="mt-1.5 h-2.5 w-4/5 rounded bg-zinc-200" />
         </div>
-        <div className="h-8 rounded-lg bg-emerald-600 px-3 text-center text-xs leading-8 text-white">Follow</div>
+        <button type="button" className="h-8 rounded-lg bg-emerald-600 px-3 text-center text-xs leading-8 text-white">Follow</button>
       </div>
       <div className="mt-3 space-y-1.5">
         <div className="h-2.5 w-full rounded bg-zinc-200" />
@@ -360,7 +360,7 @@ function DarkSurfaceCard() {
               <div className="h-3 w-28 rounded bg-zinc-700" />
               <div className="mt-1.5 h-2.5 w-20 rounded bg-zinc-700/70" />
             </div>
-            <div className="h-7 rounded-md bg-zinc-700 px-3 text-xs leading-7 text-white">Follow</div>
+            <button type="button" className="h-7 rounded-md bg-zinc-700 px-3 text-xs leading-7 text-white">Follow</button>
           </div>
           <div className="mt-3 space-y-1.5">
             <div className="h-2.5 w-full rounded bg-zinc-700" />

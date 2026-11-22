@@ -1,0 +1,52 @@
+universal-skeleton v1.2.0 — changed files only
+==============================================
+
+WHAT CHANGED
+------------
+Fix: shaped elements (badges, chips, pills with their own background colour)
+now become ONE solid skeleton block instead of keeping their colour with only
+the text inside skeletonised. While loading, the shape's background, border,
+shadow and text are hidden (new .usk-s class), and the block inherits the
+shape's own border-radius (rounded-full stays a pill).
+
+Smart exceptions (nothing else regresses):
+- decorative glows / overlays at low opacity (alpha < 0.35) are ignored
+- tall coloured blocks like code blocks and callouts (> 64 px) keep the
+  classic per-line text bars
+- empty coloured leaves (dots, pills, spacers) are covered as one block too
+- escape hatch unchanged: data-skeleton="text" forces per-line bars on a badge
+
+HOW TO APPLY
+------------
+Extract this zip over your project root (C:\Users\kiran\Downloads\skeleton\).
+It only touches the files listed below.
+
+PACKAGE  (download/universal-skeleton/)
+  src/scan.js                 shape detection + one-block painting
+  src/styles.js               new .usk-s CSS rule
+  tests/skeleton.test.js      8 new tests (49 total, all passing)
+  package.json                version 1.2.0
+                              NOTE: before publishing, check that
+                              repository/bugs/homepage still point at YOUR
+                              GitHub username
+  CHANGELOG.md                1.2.0 entry
+  README.md                   scan table row + CDN pin updated to 1.2.0
+  demo/index.html             badge showcase in cards 1 and 2
+  dist/                       rebuilt bundles (8 files, ready to use)
+
+DOC PROJECT  (root)
+  package.json                      universal-skeleton dependency -> ^1.2.0
+  src/components/docs/doc-pages.ts  "What the scanner detects" table rows
+  src/components/docs/docs-site.tsx footer version v1.2.0
+  src/components/docs/landing.tsx   hero badge v1.2.0
+
+THEN
+----
+1) cd download/universal-skeleton
+   npm publish                (prepublishOnly rebuilds dist + runs all 49 tests)
+2) in the project root:
+   npm i universal-skeleton@latest        (or: bun update universal-skeleton)
+3) commit both folders, push — Vercel redeploys with the fix live.
+
+Note: package-lock.json / bun.lock are intentionally NOT included —
+regenerate them with the command in step 2 after publishing.

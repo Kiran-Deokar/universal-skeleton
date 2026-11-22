@@ -1,11 +1,11 @@
 {
-  "name": "universal-skeleton",
+  "name": "universal-skeleton-docs",
   "version": "0.2.1",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000 2>&1",
     "build": "next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
-    "start": "NODE_ENV=production bun .next/standalone/server.js 2>&1",
+    "start": "NODE_ENV=production bun .next/standalone/server.js 2>&1 | tee server.log",
     "lint": "eslint .",
     "db:push": "prisma db push --accept-data-loss",
     "db:generate": "prisma generate",
@@ -74,7 +74,7 @@
     "sonner": "^2.0.6",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
-    "universal-skeleton": "^1.1.0",
+    "universal-skeleton": "^1.2.1",
     "uuid": "^11.1.0",
     "vaul": "^1.1.2",
     "z-ai-web-dev-sdk": "^0.0.18",

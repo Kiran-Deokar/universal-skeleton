@@ -79,7 +79,7 @@ Everything is exposed on the global `UniversalSkeleton` object. As an ES module 
 import { SkeletonLoader } from 'https://cdn.jsdelivr.net/npm/universal-skeleton/+esm';
 ```
 
-Pin a version for production: `universal-skeleton@1.1.0/dist/index.iife.min.js`.
+Pin a version for production: `universal-skeleton@1.2.1/dist/index.iife.min.js`.
 
 ## 30-second quick start
 
@@ -120,9 +120,12 @@ const user = await SkeletonLoader.while(fetchUser(), '#profile-card', { minDurat
 | Real element | Skeleton |
 | --- | --- |
 | Text (headings, paragraphs, links, labels…) | Pill-shaped bar per estimated text line; the last line is shortened for a natural look |
+| Shaped elements with their own background — badges, chips, pills, coloured labels | **One solid block over the whole shape** (the colour is hidden while loading, and the shape's own border-radius is inherited). Taller coloured blocks like code blocks or callouts keep per-line text bars |
 | `img`, `video`, `canvas` | Block with the same box; round images (border-radius 50%) become circles |
 | `button`, `input`, `select`, `textarea` | Rounded rect, inheriting the element's own border-radius |
 | Containers, cards, grids | Nothing — their children carry the skeleton |
+
+Add `data-skeleton="text"` to a badge to force per-line bars instead of a solid block.
 
 The real content stays in the DOM underneath (layout untouched) and is hidden with CSS; an absolutely positioned overlay holds the blocks. `destroy()` removes the overlay and every helper class — the DOM is left exactly as it was.
 

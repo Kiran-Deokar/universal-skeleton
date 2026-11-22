@@ -154,6 +154,15 @@ ${stagger('.usk-effect-fade .usk-block', 12, 0.09)}
 
 /* Hide the real content that sits underneath the skeleton layer */
 .usk-active .usk-t { color: transparent !important; }
+
+/* Shaped elements (badges, chips, pills…) that are covered by ONE solid
+   block must not leak their own colour, border or shadow around it */
+.usk-s {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: transparent !important;
+}
 .usk-active img,
 .usk-active picture,
 .usk-active video,

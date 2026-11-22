@@ -22,6 +22,65 @@ const SELF_BLOCK_TAGS = new Set([
 ]);
 const MEDIA_TAGS = new Set(['IMG', 'PICTURE', 'VIDEO', 'CANVAS', 'SVG', 'OBJECT', 'EMBED']);
 
+/**
+ * "Shaped" elements — ones that paint their own visible background (badges,
+ * chips, pills, coloured labels…) — are skeletonised as ONE solid block over
+ * the whole shape instead of leaving the colour visible under text bars.
+ *
+ * SHAPE_MIN_ALPHA   backgrounds weaker than this alpha (glows, overlays at
+ *                   10–20% opacity) are decorative, not shapes.
+ * SHAPE_MAX_HEIGHT  elements taller than this (cards, callouts, code blocks…)
+ *                   keep the classic per-line text bars.
+ */
+const SHAPE_MIN_ALPHA = 0.35;
+const SHAPE_MAX_HEIGHT = 64;
+
+/** Extract the alpha channel of a computed CSS color string, 0–1. */
+function colorAlpha(color) {
+  if (!color) return 0;
+  const s = String(color).trim().toLowerCase();
+  if (!s || s === 'transparent' || s === 'none') return 0;
+  // Modern syntax with a slash alpha: rgb(0 0 0 / 0.4), oklch(0.7 0.1 200 / 0.5),
+  // rgb(0 0 0 / 40%) — the alpha may be a fraction or a percentage.
+  const slash = s.match(/\/\s*([0-9.]+)(%?)\s*\)$/);
+  if (slash) return parseFloat(slash[1]) * (slash[2] ? 0.01 : 1);
+  // Hex with alpha channel: #rgba / #rrggbbaa
+  if (s.startsWith('#')) {
+    if (s.length === 5) return parseInt(s[4] + s[4], 16) / 255;
+    if (s.length === 9) return parseInt(s.slice(7), 16) / 255;
+    return 1;
+  }
+  // Tailwind v4 opacity modifiers compile to color-mix(): the first percentage
+  // is the color share and the rest is transparent, so that ratio IS the alpha.
+  if (s.startsWith('color-mix')) {
+    const mix = s.match(/([\d.]+)%/);
+    if (mix && s.includes('transparent')) return parseFloat(mix[1]) / 100;
+    return 1;
+  }
+  // Legacy syntax: rgba(r, g, b, a)
+  const legacy = s.match(/rgba?\(([^)]+)\)/);
+  if (legacy) {
+    const parts = legacy[1].split(/[\s,]+/).filter(Boolean);
+    if (parts.length >= 4) return parseFloat(parts[3]);
+    return 1;
+  }
+  return 1; // named colors and other color functions (oklch, oklab, lab, lch) — assume visible
+}
+
+/**
+ * What kind of visible surface the element paints on itself, if any:
+ *   'solid'    — an opaque-enough background-color
+ *   'gradient' — a background-image (gradient) on a text element
+ *   null       — no visible shape (transparent, decorative-only or none)
+ */
+function paintedSurface(el) {
+  const cs = computedStyle(el);
+  if (colorAlpha(cs.backgroundColor) >= SHAPE_MIN_ALPHA) return 'solid';
+  const image = cs.backgroundImage;
+  if (image && image !== 'none' && image !== '') return 'gradient';
+  return null;
+}
+
 /** Elements that never get a skeleton and are never recursed into. */
 const SKIP_TAGS = new Set([
   'SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'LINK', 'META', 'BASE',
@@ -206,11 +265,32 @@ function walk(el, ctx) {
     return;
   }
 
-  // Text leaf → pill bars.
+  // Text leaf → pill bars — unless the element paints its own shape.
+  // A badge / chip / pill with a coloured background must skeletonise as ONE
+  // block over the whole shape; otherwise the colour stays visible and only
+  // the text inside gets bars (grey bar on a green pill).
   const hasText = Array.prototype.some.call(
     el.childNodes,
     (n) => n.nodeType === 3 && n.textContent.trim().length > 0
   );
+  const surface = paintedSurface(el);
+  const badgeLike = surface !== null && (
+    // coloured badge / chip / pill with text (compact enough to be one shape)
+    (hasText && r.height <= SHAPE_MAX_HEIGHT) ||
+    // empty coloured pill, dot or spacer — nothing inside to mirror anyway
+    (!hasText && el.children.length === 0 && surface === 'solid')
+  );
+  if (badgeLike) {
+    el.classList.add('usk-s');
+    addBlock(ctx.out, ctx.overlayRect, {
+      x: r.left, y: r.top, w: r.width, h: r.height,
+      shape: 'rect',
+      radius: manual.radius != null ? manual.radius : (inheritRadius(el) ?? 0),
+      color: manual.color,
+      highlight: manual.highlight,
+    });
+    return;
+  }
   if (hasText) {
     addTextBars(ctx.out, ctx.overlayRect, el, ctx.seed++, ctx.opts);
     return;
@@ -235,6 +315,9 @@ function walk(el, ctx) {
  * @param {boolean}  [userOpts.textLines=true] one bar per estimated text line
  * @param {boolean}  [userOpts.responsive=true] rebuild on root resize
  * @param {boolean}  [userOpts.blockInteraction=true] block clicks while visible
+ *   Shaped elements (badges, chips, pills with their own background colour)
+ *   always become one solid block over the whole shape — use
+ *   `data-skeleton="text"` on a specific element to force per-line bars.
  * @returns {{root, overlay, blocks, update, setEffect, destroy}}
  */
 export function buildSkeleton(root, userOpts = {}) {
@@ -349,7 +432,7 @@ export function buildSkeleton(root, userOpts = {}) {
       overlay.remove();
       root.classList.remove('usk-active');
       if (addedRel) root.classList.remove('usk-rel');
-      root.querySelectorAll('.usk-t').forEach((el) => el.classList.remove('usk-t'));
+      root.querySelectorAll('.usk-t, .usk-s').forEach((el) => el.classList.remove('usk-t', 'usk-s'));
       if (prevBusy === null) root.removeAttribute('aria-busy');
       else root.setAttribute('aria-busy', prevBusy);
     },

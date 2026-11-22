@@ -1,6 +1,6 @@
 {
   "name": "universal-skeleton",
-  "version": "1.1.0",
+  "version": "1.2.1",
   "description": "Framework-agnostic skeleton loader that auto-generates skeletons from your real UI. 8 effects (shimmer, wave, pulse, fade, blink, sheen, bounce). Zero dependencies. Works via CDN, React, Vue, Angular, Svelte, Web Components — any JS or TS project.",
   "license": "MIT",
   "author": "Kiran Deokar",
@@ -73,10 +73,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-username/universal-skeleton.git"
+    "url": "git+https://github.com/Kiran-Deokar/universal-skeleton.git"
   },
   "bugs": {
-    "url": "https://github.com/your-username/universal-skeleton/issues"
+    "url": "https://github.com/Kiran-Deokar/universal-skeleton/issues"
   },
-  "homepage": "https://github.com/your-username/universal-skeleton#readme"
+  "homepage": "https://github.com/Kiran-Deokar/universal-skeleton#readme",
+  "dependencies": {
+    "universal-skeleton": "^1.2.1"
+  }
 }

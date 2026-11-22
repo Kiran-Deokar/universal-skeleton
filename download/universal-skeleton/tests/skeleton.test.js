@@ -356,6 +356,157 @@ describe('element classification', () => {
   });
 });
 
+describe('shaped elements (badges, chips, pills)', () => {
+  it('a coloured badge with text becomes ONE block over the whole shape', () => {
+    host.innerHTML = `
+      <span id="badge" style="background-color: rgb(16, 185, 129)">+18% this week</span>`;
+    mockRect(host, 0, 0, 300, 100);
+    mockRect(document.getElementById('badge'), 8, 8, 140, 26);
+
+    const handle = SkeletonLoader.scan('#host');
+    expect(handle.blocks).toBe(1);
+    const block = handle.overlay.querySelector('.usk-block');
+    expect(block.style.width).toBe('140px');   // full badge rect …
+    expect(block.style.height).toBe('26px');   // … not a thin text bar inside the colour
+    expect(document.getElementById('badge').classList.contains('usk-s')).toBe(true);
+    expect(document.getElementById('badge').classList.contains('usk-t')).toBe(false);
+    handle.destroy();
+  });
+
+  it('destroy() removes usk-s so the shape colour comes back', () => {
+    host.innerHTML = '<span id="badge" style="background-color: #10b981">Live</span>';
+    mockRect(host, 0, 0, 200, 100);
+    mockRect(document.getElementById('badge'), 4, 4, 80, 24);
+
+    const handle = SkeletonLoader.scan('#host');
+    expect(document.getElementById('badge').classList.contains('usk-s')).toBe(true);
+    handle.destroy();
+    expect(document.getElementById('badge').classList.contains('usk-s')).toBe(false);
+  });
+
+  it('inherits the corner radius of the shape (rounded-full pill)', () => {
+    host.innerHTML = `
+      <span id="pill" style="background-color: rgb(16, 185, 129); border-radius: 9999px">new</span>`;
+    mockRect(host, 0, 0, 200, 100);
+    mockRect(document.getElementById('pill'), 4, 4, 64, 24);
+
+    const handle = SkeletonLoader.scan('#host');
+    expect(handle.overlay.querySelector('.usk-block').style.borderRadius).toBe('9999px');
+    handle.destroy();
+  });
+
+  it('plain text without a background still gets per-line pill bars', () => {
+    host.innerHTML = '<span id="plain">no colour here</span>';
+    mockRect(host, 0, 0, 300, 100);
+    mockRect(document.getElementById('plain'), 8, 8, 160, 20);
+
+    const handle = SkeletonLoader.scan('#host');
+    expect(document.getElementById('plain').classList.contains('usk-t')).toBe(true);
+    expect(document.getElementById('plain').classList.contains('usk-s')).toBe(false);
+    expect(handle.overlay.querySelector('.usk-block').style.height).toBe('12px'); // thin bar
+    handle.destroy();
+  });
+
+  it('tall coloured text blocks (code blocks, callouts) keep per-line bars', () => {
+    host.innerHTML = '<pre id="code" style="background-color: rgb(15, 23, 42)">const x = 1;</pre>';
+    mockRect(host, 0, 0, 400, 200);
+    mockRect(document.getElementById('code'), 0, 0, 400, 120);
+
+    const handle = SkeletonLoader.scan('#host');
+    expect(document.getElementById('code').classList.contains('usk-s')).toBe(false);
+    expect(document.getElementById('code').classList.contains('usk-t')).toBe(true);
+    expect(handle.blocks).toBeGreaterThan(1);
+    handle.destroy();
+  });
+
+  it('very transparent backgrounds (glows, overlays) are not shapes', () => {
+    host.innerHTML = '<span id="glow" style="background-color: rgba(16, 185, 129, 0.2)">glow</span>';
+    mockRect(host, 0, 0, 200, 100);
+    mockRect(document.getElementById('glow'), 4, 4, 80, 20);
+
+    const handle = SkeletonLoader.scan('#host');
+    expect(document.getElementById('glow').classList.contains('usk-s')).toBe(false);
+    expect(document.getElementById('glow').classList.contains('usk-t')).toBe(true);
+    handle.destroy();
+  });
+
+  it('empty coloured pills and dots become one block too', () => {
+    host.innerHTML = '<div id="dot" style="background-color: rgb(16, 185, 129)"></div>';
+    mockRect(host, 0, 0, 200, 100);
+    mockRect(document.getElementById('dot'), 8, 8, 24, 24);
+
+    const handle = SkeletonLoader.scan('#host');
+    expect(handle.blocks).toBe(1);
+    expect(document.getElementById('dot').classList.contains('usk-s')).toBe(true);
+    handle.destroy();
+  });
+
+  it('gradient badges with text become one block', () => {
+    host.innerHTML = `
+      <a id="cta" style="background-image: linear-gradient(90deg, #ec4899, #8b5cf6)">Get started</a>`;
+    mockRect(host, 0, 0, 300, 100);
+    mockRect(document.getElementById('cta'), 8, 8, 120, 36);
+
+    const handle = SkeletonLoader.scan('#host');
+    expect(handle.blocks).toBe(1);
+    expect(document.getElementById('cta').classList.contains('usk-s')).toBe(true);
+    handle.destroy();
+  });
+
+  it('Tailwind v4 oklch() backgrounds are solid shapes', () => {
+    host.innerHTML = `
+      <div id="follow" style="background-color: oklch(0.596 0.145 163.225); border-radius: 8px">Follow</div>`;
+    mockRect(host, 0, 0, 300, 100);
+    mockRect(document.getElementById('follow'), 8, 8, 90, 32);
+
+    const handle = SkeletonLoader.scan('#host');
+    expect(handle.blocks).toBe(1);
+    expect(document.getElementById('follow').classList.contains('usk-s')).toBe(true);
+    handle.destroy();
+  });
+
+  it('oklch() with slash alpha counts toward the shape threshold', () => {
+    host.innerHTML = `
+      <span id="chip" style="background-color: oklch(0.596 0.145 163.225 / 0.5)">chip</span>`;
+    mockRect(host, 0, 0, 200, 60);
+    mockRect(document.getElementById('chip'), 4, 4, 64, 24);
+
+    const handle = SkeletonLoader.scan('#host');
+    expect(handle.blocks).toBe(1);
+    expect(document.getElementById('chip').classList.contains('usk-s')).toBe(true);
+    handle.destroy();
+  });
+
+  it('percentage slash alpha (rgb(0 0 0 / 40%)) is understood', () => {
+    host.innerHTML = `
+      <span id="chip" style="background-color: rgb(16 185 129 / 40%)">chip</span>`;
+    mockRect(host, 0, 0, 200, 60);
+    mockRect(document.getElementById('chip'), 4, 4, 64, 24);
+
+    const handle = SkeletonLoader.scan('#host');
+    // jsdom normalizes this to rgba(16, 185, 129, 0.4); real browsers keep
+    // rgb(16 185 129 / 40%) — both forms must resolve to alpha 0.4 ≥ 0.35.
+    expect(handle.blocks).toBe(1);
+    expect(document.getElementById('chip').classList.contains('usk-s')).toBe(true);
+    handle.destroy();
+  });
+
+  it('color-mix() at 10% stays decorative, at 50% (Tailwind /50) is a shape', () => {
+    host.innerHTML = `
+      <span id="glow" style="background-color: color-mix(in oklab, oklch(0.596 0.145 163.225) 10%, transparent)">glow</span>
+      <span id="chip" style="background-color: color-mix(in oklab, oklch(0.596 0.145 163.225) 50%, transparent)">chip</span>`;
+    mockRect(host, 0, 0, 300, 100);
+    mockRect(document.getElementById('glow'), 4, 4, 80, 20);
+    mockRect(document.getElementById('chip'), 4, 30, 80, 20);
+
+    const handle = SkeletonLoader.scan('#host');
+    expect(document.getElementById('glow').classList.contains('usk-s')).toBe(false);
+    expect(document.getElementById('glow').classList.contains('usk-t')).toBe(true);
+    expect(document.getElementById('chip').classList.contains('usk-s')).toBe(true);
+    handle.destroy();
+  });
+});
+
 describe('effects', () => {
   it('supports the pulse and none effects via options', () => {
     setupFeed();

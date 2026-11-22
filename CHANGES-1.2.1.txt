@@ -1,0 +1,56 @@
+universal-skeleton v1.2.1 — changed files only
+================================================
+
+HOW TO APPLY
+1. Extract this zip over your project root: C:\Users\kiran\Downloads\skeleton\
+   (choose "Replace files" when Windows asks — do NOT keep both copies)
+2. The zip contains only files that changed relative to your v1.1.0 state.
+
+WHAT CHANGED (v1.2.1)
+- Shaped elements (badges, chips, pills, coloured labels, divs with their own
+  background) now skeletonise as ONE solid block; their colour is hidden via
+  the .usk-s helper class while loading and restored on destroy().
+- Tailwind v4 color formats fully supported by shape detection: oklch()/oklab()/
+  lab()/lch(), percentage slash alpha rgb(0 0 0 / 40%), and color-mix() opacity
+  modifiers (bg-emerald-600/50 -> 50% alpha).
+- Effects page previews in the docs project: the "Follow" demo element is a
+  real <button> now, so it renders correctly under any engine version.
+- Version badges bumped to v1.2.1 everywhere (landing badge, site footer, README).
+- **Landing page redesigned — premium, spacious, 3D.** Tilted hero card with stacked
+  deck layers and perspective hover-flatten, masked grid/dot backdrops, soft glow
+  blobs, eyebrow section labels, gradient headline accent, lift-on-hover cards with
+  layered shadows, gradient number/icon tiles, and a roomier vertical rhythm
+  (landing container widened to max-w-7xl with taller padding).
+
+WHY 1.2.1 AND NOT 1.2.0
+- npm policy: "package-name@version is unique, and cannot be reused by
+  unpublishing and re-publishing it." A version that was published and then
+  unpublished can NEVER be published again under the same number.
+- 1.2.0 was published and then unpublished, so it is permanently burned.
+
+PUBLISH STEPS (on your machine)
+  cd C:\Users\kiran\Downloads\skeleton\download\universal-skeleton
+  npm whoami          # if this errors -> npm login first
+  npm publish         # prepublishOnly auto-runs build + 53 tests; enter OTP if 2FA
+
+THEN UPDATE THE DOC PROJECT
+  cd C:\Users\kiran\Downloads\skeleton
+  npm i universal-skeleton@latest
+  git add -A
+  git commit -m "universal-skeleton 1.2.1: shaped elements + Tailwind v4 colors"
+  git push            # Vercel redeploys automatically
+
+FILE LIST (20 files + this note)
+  package.json                                        (doc project, ^1.2.1)
+  src/components/docs/effects-page.tsx                (Follow div -> button)
+  src/components/docs/doc-pages.ts                    (detection table rows)
+  src/components/docs/docs-site.tsx                   (footer v1.2.1)
+  src/components/docs/landing.tsx                     (badge v1.2.1)
+  download/universal-skeleton/package.json            (1.2.1)
+  download/universal-skeleton/src/scan.js             (shape detection + color parsing)
+  download/universal-skeleton/src/styles.js           (.usk-s rule)
+  download/universal-skeleton/tests/skeleton.test.js  (53 tests)
+  download/universal-skeleton/CHANGELOG.md
+  download/universal-skeleton/README.md
+  download/universal-skeleton/demo/index.html
+  download/universal-skeleton/dist/*                  (rebuilt bundles)

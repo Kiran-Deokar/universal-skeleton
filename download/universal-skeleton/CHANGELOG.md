@@ -3,6 +3,22 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.2.1] - 2026-11-22
+
+> Note: 1.2.0 was briefly published and then unpublished — npm never allows the same
+> name@version to be reused, so this release supersedes it as 1.2.1.
+
+### Fixed
+- **Shaped elements now skeletonise as one solid block.** An element that paints its own visible background (badges, chips, pills, coloured labels — e.g. `<span class="bg-emerald-100 rounded-full">+18% this week</span>`) used to keep its colour while only the text inside was replaced with a bar. The whole shape now becomes the skeleton block: the element's background, border colour, box shadow and text are hidden while loading, and the block inherits the shape's own border-radius (so `rounded-full` pills stay pills).
+
+### Added
+- `paintedSurface` detection inside the scanner — solid backgrounds (alpha ≥ 0.35, so decorative glows and overlays at 10–20% opacity are ignored) and background-image gradients both count as a shape.
+- Empty coloured leaves (dots, pills, spacers with a background and no content) are skeletonised as one block as well.
+- Elements taller than 64 px (code blocks, callouts, cards) keep the classic per-line text bars, so big coloured surfaces don't collapse into a single blob.
+- The `.usk-s` helper class is removed again on `destroy()` — the shape's colour comes back exactly as before.
+- Escape hatch unchanged: `data-skeleton="text"` on a badge still forces per-line bars.
+- **Tailwind v4 color formats are fully understood.** Shape detection now parses `oklch()` / `oklab()` / `lab()` / `lch()` (opaque by definition), percentage slash alpha (`rgb(0 0 0 / 40%)`) and Tailwind's `color-mix()` opacity modifiers (`bg-emerald-600/50` → 50% alpha), so detection no longer depends on the browser serializing colors as `rgb()`.
+
 ## [1.1.0] - 2026-11-21
 
 ### Added
