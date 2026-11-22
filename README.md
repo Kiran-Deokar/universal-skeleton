@@ -51,7 +51,7 @@ This repository contains **two things**:
 Requires Node 18+ (or Bun).
 
 ```bash
-git clone https://github.com/<your-username>/universal-skeleton.git
+git clone https://github.com/Kiran-Deokar/universal-skeleton.git
 cd universal-skeleton
 
 bun install        # or: npm install

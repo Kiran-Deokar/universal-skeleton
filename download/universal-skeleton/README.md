@@ -462,7 +462,7 @@ All evergreen browsers (Chrome, Edge, Firefox, Safari). Uses only `getBoundingCl
 ## Local development
 
 ```bash
-git clone https://github.com/your-username/universal-skeleton
+git clone https://github.com/Kiran-Deokar/universal-skeleton
 cd universal-skeleton
 npm install
 npm run build      # builds ESM + CJS + CDN (iife) + css into dist/
