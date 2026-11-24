@@ -9,7 +9,7 @@
  *   SkeletonLoader.while(promiseOrFn, target, options) → shows skeleton while loading
  */
 
-import { injectStyles } from './styles.js';
+import { injectStyles, autoInjectEnabled } from './styles.js';
 import { buildSkeleton } from './scan.js';
 
 /** @type {WeakMap<Element, object>} */
@@ -47,19 +47,25 @@ export class SkeletonLoader {
     const root = resolveTarget(target);
     const existing = handles.get(root);
     if (existing) existing.destroy();
-    injectStyles();
-    const built = buildSkeleton(root, options);
-    const handle = {
-      root,
-      overlay: built.overlay,
-      get blocks() { return built.blocks; },
-      update: () => built.update(),
-      setEffect: (effect) => built.setEffect(effect),
-      setTheme: (theme) => built.setTheme(theme),
-      destroy: () => {
-        built.destroy();
-        handles.delete(root);
-      },
+    // Lazy style injection: nothing is added to the document until the first
+    // skeleton appears. Strict-CSP teams can call setAutoInject(false) and
+    // ship dist/universal-skeleton.css themselves.
+    if (autoInjectEnabled()) injectStyles();
+    // The public handle is created up-front and passed to the engine as
+    // _owner, so the timeout watchdog can expire the FULL handle (including
+    // its registry entry), not just the internal overlay state.
+    const handle = {};
+    const built = buildSkeleton(root, { ...options, _owner: handle });
+    handle.root = root;
+    handle.overlay = built.overlay;
+    Object.defineProperty(handle, 'blocks', { get: () => built.blocks });
+    Object.defineProperty(handle, 'pending', { get: () => built.pending });
+    handle.update = () => built.update();
+    handle.setEffect = (effect) => built.setEffect(effect);
+    handle.setTheme = (theme) => built.setTheme(theme);
+    handle.destroy = () => {
+      built.destroy();
+      handles.delete(root);
     };
     handles.set(root, handle);
     return handle;
@@ -96,6 +102,9 @@ export class SkeletonLoader {
    */
   static async while(source, target, options = {}) {
     const { minDuration = 0, ...rest } = options;
+    // `delay` (anti-flicker) and `timeout` (watchdog) are honoured inside the
+    // scan handle: a promise that resolves within `delay` never shows a
+    // skeleton; one that hangs longer than `timeout` gets rescued.
     const handle = this.scan(target, rest);
     const startedAt = Date.now();
     try {

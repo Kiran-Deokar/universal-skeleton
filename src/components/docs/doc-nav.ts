@@ -37,6 +37,7 @@ export const DOC_NAV: DocNavGroup[] = [
       { slug: 'api-loader', title: 'SkeletonLoader' },
       { slug: 'api-web-component', title: '<skeleton-screen>' },
       { slug: 'api-attributes', title: 'data-skeleton attributes' },
+      { slug: 'api-us-contract', title: 'data-us-* contract' },
     ],
   },
   {

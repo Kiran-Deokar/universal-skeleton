@@ -3,6 +3,61 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased] — enterprise hardening
+
+> Folded into the next published version. The package.json stays at 1.2.1 until
+> release time; if 1.2.1 was already published, run `npm version minor` first.
+
+### Added
+- **Universal `data-us-*` attribute contract** — declarative loading for plain
+  HTML, PHP/Blade/WordPress templates, HTMX and Turbo Frames:
+  `data-us-loading` (attribute-driven on/off via one shared, rAF-batched
+  MutationObserver), `data-us-ignore`, `data-us-shape="circle|pill|square|rect"`,
+  `data-us-lines="1..6"`, `data-us-width="65%"`, `data-us-color`,
+  `data-us-highlight`. Classic `data-skeleton-*` attributes keep priority and
+  everything still works unchanged.
+- **Anti-flicker `delay`** (`data-us-delay`, `scan()`/`while()` option,
+  `<skeleton-screen delay>`) — the skeleton is laid out but invisible and is
+  cancelled entirely when loading finishes first; fast cached responses never
+  flash.
+- **Failsafe `timeout` watchdog** (`data-us-timeout`, `scan()`/`while()` option,
+  `<skeleton-screen timeout>`) — a hanging API can no longer freeze the UI in a
+  permanent skeleton; the handle auto-destroys and `onTimeout(root)` fires.
+- **`data-us-repeat="N"`** — empty loop containers (`@foreach []`, `v-for []`,
+  `.map()` over null) paint N evenly stacked placeholder rows instead of one
+  grey void.
+- **Interactive lockdown** — while a skeleton is visible, all interactive
+  descendants (`a[href]`, `button`, `input`, `select`, `textarea`, `iframe`,
+  `details`, `[tabindex]`, `[contenteditable]`) get the native `inert`
+  attribute (fallback: `tabindex="-1"` + `pointer-events:none` class);
+  originals are restored exactly on destroy. Disable with
+  `blockInteraction: false`.
+- **Zero-CLS container pin** — the scanned root's height is pinned as inline
+  `min-height` during loading (restored on destroy), so emptying the container
+  for the fetch can never collapse the layout.
+- **Shared accessibility live region** — one debounced `role="status"` element
+  per document announces *Loading content…* / *Content loaded* as skeletons
+  come and go.
+- **Strict-CSP mode** — `setAutoInject(false)` disables lazy style injection;
+  ship `dist/universal-skeleton.css` as a static asset for
+  `style-src 'self'` policies. Style injection is now lazy in general (first
+  skeleton, not import time).
+- **Save-Data compliance** — on `Save-Data: on` connections the animation is
+  switched off automatically (static blocks).
+- **`maxDepth` option** — traversal depth cap (default 20).
+- Documentation: new "data-us-* contract" docs page + README contract and
+  security sections.
+
+### Changed
+- **The DOM walk is now iterative** (queue-based instead of recursion) with a
+  visited-set cycle guard and the `maxDepth` cap — pathologically deep or
+  malformed trees can never raise `RangeError`. Document-order traversal and
+  therefore deterministic bar widths are preserved.
+- Scan handles now expose a `pending` getter (`true` while the anti-flicker
+  delay has not elapsed).
+- The timeout watchdog destroys the full public handle, so `isActive()` is
+  correct after an expiry.
+
 ## [1.2.1] - 2026-11-22
 
 > Note: 1.2.0 was briefly published and then unpublished — npm never allows the same

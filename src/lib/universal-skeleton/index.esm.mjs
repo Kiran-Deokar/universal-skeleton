@@ -34,7 +34,7 @@ skeleton-screen { display: block; }
 }
 
 /* Force a positioning context on the scanned root (only when static) */
-.usk-rel { position: relative !important; }
+.usk-rel { position: relative !important;z-index:1; }
 
 /* Skeleton layer \u2014 one overlay per scanned root */
 .usk-overlay {

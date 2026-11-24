@@ -39,6 +39,8 @@ Works everywhere. **One package, any language, any framework:**
 - [How the auto-scan works](#how-the-auto-scan-works)
 - [API reference](#api-reference)
 - [Manual mode — data attributes](#manual-mode--data-attributes)
+- [Universal contract — data-us-*](#universal-contract--data-us-)
+- [Security & hardening](#security--hardening)
 - [Web Component `<skeleton-screen>`](#web-component-skeleton-screen)
 - [Framework guides](#framework-guides)
 - [Effects: 8 animation styles](#effects-8-animation-styles)
@@ -211,6 +213,49 @@ Prefer explicit control? Tag any element — the scanner honors it and skips its
 
 `data-skeleton-ignore` works anywhere, even inside an auto-scanned region — perfect for badges, spinners or anything that should stay visible.
 
+## Universal contract — data-us-*
+
+The same engine also speaks a framework-agnostic, declarative attribute contract designed for plain HTML, PHP/Blade/WordPress templates, HTMX, Turbo Frames and template-driven stacks — no JavaScript wiring needed:
+
+```html
+<div data-us-loading="true" data-us-delay="150" data-us-timeout="15000">
+  <article class="card">
+    <span class="badge" data-us-ignore>Featured</span>
+    <img src="avatar.jpg" data-us-shape="circle" />
+    <h3 data-us-width="65%">Article heading</h3>
+    <p data-us-lines="3">Summary paragraph placeholder text.</p>
+    <button type="button">Read more</button>
+  </article>
+</div>
+<!-- flip to real content from anywhere: -->
+<!-- el.setAttribute('data-us-loading', 'false') -->
+```
+
+| Attribute | Values | Effect |
+| --- | --- | --- |
+| `data-us-loading` | `"true"` / `"false"` (also `""`, `"1"`, `"on"`, `"loading"`) | Skeleton on/off on this container, driven by one shared rAF-batched MutationObserver; removing the element destroys its skeleton (no leaks on route changes) |
+| `data-us-ignore` | boolean attribute | Exclude this element and its subtree (badges, spinners) |
+| `data-us-shape` | `circle` / `pill` / `square` / `rect` | Force block geometry — `pill` fully rounded, `square` zero radius |
+| `data-us-lines` | `1…6` | Expand one text element into N pill bars with ragged-right endings |
+| `data-us-width` | `"65%"` / `"120px"` / `"120"` | Pin the width of this element’s text bars |
+| `data-us-color` / `data-us-highlight` | CSS color | Aliases of `data-skeleton-color` / `data-skeleton-highlight` |
+| `data-us-delay` | milliseconds | **Anti-flicker** — the skeleton stays invisible and is cancelled entirely if loading finishes first; fast cached responses never flash |
+| `data-us-timeout` | milliseconds | **Failsafe watchdog** — auto-destroys a stuck skeleton and fires the optional `onTimeout` callback |
+| `data-us-repeat` | `1…50` | Empty loop container (`@foreach []`, `v-for []`) → paint N evenly stacked placeholder rows |
+
+The same guards exist as options: `SkeletonLoader.scan(el, { delay: 150, timeout: 15000, onTimeout })` and `<skeleton-screen delay="150" timeout="15000">`. When `data-skeleton-*` and `data-us-*` are both present on an element, the classic attribute wins — migrate contract by contract without breaking anything.
+
+## Security & hardening
+
+- **XSS immunity** — the engine never uses `innerHTML`/`eval` and never clones untrusted nodes; blocks are built exclusively with `createElement` + CSSOM (`style.setProperty`), so attribute values can never inject markup.
+- **Interactive lockdown** — while a skeleton is visible every interactive descendant (`a`, `button`, `input`, `select`, `textarea`, `iframe`, `[tabindex]`, `[contenteditable]`) gets the native **`inert`** attribute (fallback: `tabindex="-1"` + `pointer-events: none`) and everything is restored exactly on `destroy()` — no phantom clicks, tab traps or double submits.
+- **Strict-CSP mode** — style injection is lazy (first skeleton, not import). For `style-src 'self'` policies call `setAutoInject(false)` before the first scan and ship `dist/universal-skeleton.css` as a static asset.
+- **No stack overflow** — the DOM walk is iterative (queue-based) with a `maxDepth` cap (default 20, configurable) and a visited-set cycle guard; 5,000-level-deep trees cannot crash the tab.
+- **Zero CLS** — the scanned root’s height is pinned as `min-height` during loading and restored afterwards; removing children for the fetch never collapses the layout.
+- **Deterministic output** — zero `Math.random()`: bar widths are seeded from DOM order, so identical markup always paints identical skeletons (SSR/hydration-safe).
+- **Memory safety** — element metadata lives in `WeakMap`/`Map` entries that die with the handle; removed `data-us-loading` elements are destroyed automatically by the shared observer.
+- **Accessibility** — `aria-busy` on the active region, `aria-hidden` blocks, and one shared debounced `role="status"` live region per document (*Loading content…* → *Content loaded*); animations off under `prefers-reduced-motion` and `Save-Data`.
+
 ## Web Component `<skeleton-screen>`
 
 Wrap any markup; toggle the boolean `loading` attribute to switch between skeleton and real UI. Registered automatically in the browser (also available via `registerSkeletonScreen('my-tag')`).
@@ -230,6 +275,8 @@ Wrap any markup; toggle the boolean `loading` attribute to switch between skelet
 | `highlight-color` | Shimmer / wave band color |
 | `duration` | One animation cycle — `"2s"` or `"900"` (ms) |
 | `radius` | Corner radius in px |
+| `delay` | Anti-flicker grace period in ms — a load that finishes inside it never shows a skeleton |
+| `timeout` | Failsafe watchdog in ms — auto-destroys a stuck skeleton |
 
 JS control: `document.querySelector('skeleton-screen').show(options)` and `.hide()`.
 
@@ -462,7 +509,7 @@ All evergreen browsers (Chrome, Edge, Firefox, Safari). Uses only `getBoundingCl
 ## Local development
 
 ```bash
-git clone https://github.com/Kiran-Deokar/universal-skeleton
+git clone https://github.com/your-username/universal-skeleton
 cd universal-skeleton
 npm install
 npm run build      # builds ESM + CJS + CDN (iife) + css into dist/

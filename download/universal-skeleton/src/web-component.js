@@ -20,6 +20,8 @@
  *   highlight-color shimmer/wave band color
  *   duration        one animation cycle, e.g. "2s" or "800" (ms)
  *   radius          corner radius in px for rect blocks
+ *   delay           anti-flicker grace period in ms (default 0)
+ *   timeout         failsafe watchdog in ms (default 0 = disabled)
  */
 
 import { SkeletonLoader } from './skeleton-loader.js';
@@ -33,7 +35,7 @@ const CustomElementBase = typeof HTMLElement !== 'undefined' ? HTMLElement : cla
 
 class SkeletonScreen extends CustomElementBase {
   static get observedAttributes() {
-    return ['loading', 'effect', 'theme', 'color', 'highlight-color', 'duration', 'radius'];
+    return ['loading', 'effect', 'theme', 'color', 'highlight-color', 'duration', 'radius', 'delay', 'timeout'];
   }
 
   connectedCallback() {
@@ -83,6 +85,10 @@ class SkeletonScreen extends CustomElementBase {
     if (duration) opts.duration = duration;
     const radius = parseFloat(this.getAttribute('radius'));
     if (Number.isFinite(radius)) opts.radius = radius;
+    const delay = parseInt(this.getAttribute('delay'), 10);
+    if (Number.isFinite(delay) && delay > 0) opts.delay = delay;
+    const timeout = parseInt(this.getAttribute('timeout'), 10);
+    if (Number.isFinite(timeout) && timeout > 0) opts.timeout = timeout;
     this._handle = SkeletonLoader.scan(this, opts);
   }
 

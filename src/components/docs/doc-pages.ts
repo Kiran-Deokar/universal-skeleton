@@ -612,6 +612,8 @@ SkeletonLoader.restore('#profile');`,
           ['`highlight-color`', 'any CSS color', 'Bright band color'],
           ['`duration`', '`"2s"` or `"900"`', 'One animation cycle'],
           ['`radius`', 'px number', 'Corner radius of rect blocks'],
+          ['`delay`', 'milliseconds', 'Anti-flicker grace period — a load that finishes inside it never shows a skeleton'],
+          ['`timeout`', 'milliseconds', 'Failsafe watchdog — auto-destroys a stuck skeleton and reveals the UI'],
         ],
       },
       {
@@ -726,6 +728,112 @@ registerSkeletonScreen('my-skeleton'); // <my-skeleton loading>`,
         t: 'callout',
         kind: 'tip',
         text: 'Attributes only apply while a scan covers them — they are read at scan time and re-read on every rebuild, so toggling one dynamically updates the next paint.',
+      },
+      {
+        t: 'callout',
+        kind: 'info',
+        text: 'These classic attributes have a framework-agnostic twin: the **data-us-* contract** — see the next page. When both are set on the same element, `data-skeleton-*` wins.',
+      },
+    ],
+  },
+
+  /* ---------------------------------------------------------------- */
+  /* API — the universal data-us-* contract                            */
+  /* ---------------------------------------------------------------- */
+  {
+    slug: 'api-us-contract',
+    title: 'The data-us-* contract',
+    description:
+      'One declarative attribute contract for plain HTML, PHP/Blade templates, HTMX, Turbo Frames and every framework that prefers markup over code — the exact same engine underneath, zero JavaScript required to drive it.',
+    blocks: [
+      { t: 'h2', text: 'Declarative loading' },
+      {
+        t: 'p',
+        text: 'Set `data-us-loading` on any container and the library watches it for you — a single shared, lazily-created MutationObserver batches reactions through requestAnimationFrame. Flip the attribute from anywhere (server-rendered markup, HTMX swaps, Turbo streams, jQuery, template conditionals) and the skeleton follows.',
+      },
+      {
+        t: 'code',
+        lang: 'html',
+        label: 'plain HTML / PHP / WordPress — zero build step',
+        code: `<link rel="stylesheet" href="/assets/universal-skeleton.css" />
+<script src="/assets/universal-skeleton.iife.js" defer></script>
+
+<div data-us-loading="true" data-us-delay="150" data-us-timeout="15000">
+  <article class="card">
+    <span class="badge" data-us-ignore>Featured</span>
+    <img src="avatar.jpg" data-us-shape="circle" />
+    <h3 data-us-width="65%">Article heading</h3>
+    <p data-us-lines="3">Summary paragraph placeholder text.</p>
+    <button type="button">Read more</button>
+  </article>
+</div>
+
+<!-- swap to real content from anywhere: -->
+<!-- el.setAttribute('data-us-loading', 'false') -->`,
+      },
+      {
+        t: 'table',
+        head: ['Attribute', 'Values', 'Effect'],
+        rows: [
+          ['`data-us-loading`', '`"true"` / `"false"` (also `""`, `"1"`, `"on"`, `"loading"`)', 'Turns the skeleton on this container on and off. Removing the element from the DOM destroys its skeleton automatically — no leaks on route changes'],
+          ['`data-us-ignore`', 'boolean attribute', 'Exclude this element (and its subtree) from the skeleton — badges, spinners, live counters'],
+          ['`data-us-shape`', '`circle` / `pill` / `square` / `rect`', 'Force the geometry of this block — `pill` is fully rounded, `square` has zero radius'],
+          ['`data-us-lines`', '`1…6`', 'Expand one text element into N pill bars with ragged-right endings'],
+          ['`data-us-width`', '`"65%"` / `"120px"` / `"120"`', 'Pin the width of this element’s text bars — percentage of the element or absolute pixels'],
+          ['`data-us-color`', 'CSS color', 'Base color of this block (alias of `data-skeleton-color`)'],
+          ['`data-us-highlight`', 'CSS color', 'Shimmer band color of this block (alias of `data-skeleton-highlight`)'],
+        ],
+      },
+      { t: 'h2', text: 'Timing guards' },
+      {
+        t: 'p',
+        text: 'Two attributes make loading states production-safe on any network. They work with `data-us-loading`, `SkeletonLoader.scan()` / `.while()` options, and `<skeleton-screen delay timeout>` alike.',
+      },
+      {
+        t: 'table',
+        head: ['Attribute', 'Values', 'Effect'],
+        rows: [
+          ['`data-us-delay`', 'milliseconds', '**Anti-flicker grace period.** The skeleton stays invisible (laid out, but hidden) and is cancelled entirely if loading finishes first — cached responses under 150 ms never flash'],
+          ['`data-us-timeout`', 'milliseconds', '**Failsafe watchdog.** If the data has not arrived after N ms the skeleton destroys itself and fires the optional `onTimeout` callback — a hanging API can never freeze the UI in a permanent skeleton'],
+          ['`data-us-repeat`', '`1…50`', 'The loop this container backs is empty — paint N evenly stacked placeholder rows instead of one grey void (`@foreach` with `[]`, `v-for` with an empty list, `.map()` over `null`)'],
+        ],
+      },
+      { t: 'h2', text: 'Enterprise hardening, built in' },
+      {
+        t: 'bullets',
+        items: [
+          '**Interactive lockdown.** While a skeleton is visible, every interactive descendant (`a[href]`, `button`, `input`, `select`, `textarea`, `iframe`, `[tabindex]`, `[contenteditable]`) gets the native `inert` attribute — no phantom clicks, no keyboard focus into hidden controls, no double submits. Original attributes are restored exactly on `destroy()`.',
+          '**Zero-CLS container pin.** The scanned root’s current height is pinned as an inline `min-height` during loading, so emptying the container for the fetch can never collapse the layout. Restored on destroy.',
+          '**Iterative traversal, depth-capped.** The DOM walk is queue-based (no recursion) with a `maxDepth` guard (default 20, configurable) and a visited-set cycle guard — pathologically deep or malformed trees can never crash the tab.',
+          '**Deterministic output.** No `Math.random()` anywhere — every bar width is seeded from DOM order, so the same markup always paints the same skeleton (SSR and hydration snapshots stay stable).',
+          '**Screen-reader announcements.** `aria-busy="true"` on the active region, `aria-hidden` on all generated blocks, and one shared debounced `role="status"` live region per document that says *Loading content…* → *Content loaded*.',
+          '**Save-Data aware.** On `Save-Data: on` connections the animation is switched off automatically — static blocks, no repaint cost.',
+          '**Strict-CSP friendly.** Styles are injected lazily (first skeleton, not import). For `style-src \'self\'` policies call `setAutoInject(false)` and ship `dist/universal-skeleton.css` as a static asset instead.',
+          '**Reduced motion.** Every animation is disabled under `prefers-reduced-motion: reduce` out of the box.',
+        ],
+      },
+      {
+        t: 'code',
+        lang: 'javascript',
+        label: 'same guards via the JS API',
+        code: `SkeletonLoader.scan('#dashboard', {
+  delay: 150,          // anti-flicker grace period (ms)
+  timeout: 15000,      // failsafe watchdog (ms)
+  onTimeout(root) {    // graceful fallback when data hangs
+    root.textContent = 'Could not load — retry';
+  },
+});
+
+// promise form — guards compose with while()
+SkeletonLoader.while(fetchUser(), '#profile', {
+  delay: 150,
+  timeout: 10000,
+});`,
+      },
+      {
+        t: 'callout',
+        kind: 'info',
+        text: 'Precedence on a single element: `data-skeleton-*` (classic) → `data-us-*` (universal). Both contracts drive the exact same engine, so you can migrate attribute by attribute — nothing breaks in between.',
       },
     ],
   },

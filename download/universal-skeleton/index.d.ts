@@ -48,6 +48,16 @@ export interface SkeletonOptions {
   blockInteraction?: boolean;
   /** SkeletonLoader.while() only: keep the skeleton visible at least this long (ms). */
   minDuration?: number;
+  /** Anti-flicker grace period (ms) — the skeleton stays invisible and is
+   *  cancelled entirely if loading finishes first. Default: 0. */
+  delay?: number;
+  /** Failsafe watchdog (ms) — auto-destroys the skeleton if loading is still
+   *  pending after this long. Default: 0 (disabled). */
+  timeout?: number;
+  /** Called when the timeout watchdog fires (after the skeleton is removed). */
+  onTimeout?: (root: Element) => void;
+  /** Maximum DOM traversal depth. Default: 20. */
+  maxDepth?: number;
 }
 
 export interface SkeletonHandle {
@@ -55,6 +65,8 @@ export interface SkeletonHandle {
   readonly overlay: HTMLElement;
   /** Number of skeleton blocks currently painted. */
   readonly blocks: number;
+  /** True while the anti-flicker delay has not elapsed yet. */
+  readonly pending: boolean;
   /** Re-measure the real UI and rebuild every block. */
   update(): void;
   /** Switch the animation at runtime — any SkeletonEffect value. */
@@ -103,6 +115,17 @@ export declare function registerSkeletonScreen(name?: string): void;
 /** Inject the stylesheet once per document. Safe to call repeatedly. */
 export declare function injectStyles(): boolean;
 
+/** Enable/disable lazy style injection (strict-CSP mode: pass false and ship
+ *  dist/universal-skeleton.css as a static asset instead). */
+export declare function setAutoInject(value: boolean): void;
+
+/** Start the shared data-us-loading attribute observer (runs automatically in
+ *  the browser; exposed for tests and micro-frontend lifecycle control). */
+export declare function startAutoLoading(): MutationObserver | null;
+
+/** Stop the shared data-us-loading observer. */
+export declare function stopAutoLoading(): void;
+
 /** The complete skeleton stylesheet (also shipped as dist/universal-skeleton.css). */
 export declare const SKELETON_CSS: string;
 
@@ -122,6 +145,10 @@ export interface SkeletonScreenAttributes {
   'highlight-color'?: string;
   duration?: string | number;
   radius?: number | string;
+  /** Anti-flicker grace period (ms). */
+  delay?: number | string;
+  /** Failsafe watchdog (ms). */
+  timeout?: number | string;
   [key: string]: unknown;
 }
 

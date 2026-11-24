@@ -39,15 +39,42 @@ skeleton-screen { display: block; }
 }
 
 /* Force a positioning context on the scanned root (only when static) */
-.usk-rel { position: relative !important; }
+.usk-rel { position: relative !important;z-index:1 }
 
-/* Skeleton layer — one overlay per scanned root */
+/* Skeleton layer — one overlay per scanned root.
+   "contain" isolates layout/paint work inside the overlay so skeleton
+   animations never trigger recalculations across the rest of the page. */
 .usk-overlay {
   position: absolute;
   inset: 0;
   z-index: 2147483000;
   overflow: hidden;
   border-radius: inherit;
+  contain: layout style paint;
+}
+
+/* Anti-flicker pending state — laid out and measurable, but invisible.
+   (visibility, not display:none: the geometry must stay measurable) */
+.usk-pending {
+  visibility: hidden !important;
+}
+
+/* inert fallback for browsers without the native attribute */
+.usk-noio {
+  pointer-events: none !important;
+}
+
+/* Single shared live region for screen readers (visually hidden) */
+.usk-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 .usk-overlay.usk-blocking {
   pointer-events: auto;
@@ -218,4 +245,23 @@ export function injectStyles(doc = typeof document !== 'undefined' ? document : 
   style.textContent = SKELETON_CSS;
   (doc.head || doc.documentElement).appendChild(style);
   return true;
+}
+
+/* ------------------------------------------------------------------ *
+ * Auto-injection switch (strict CSP mode)                            *
+ * ------------------------------------------------------------------
+ * Enterprise apps that run `style-src 'self'` without 'unsafe-inline'
+ * forbid runtime <style> injection. They call setAutoInject(false) before
+ * the first skeleton and ship dist/universal-skeleton.css as a static
+ * stylesheet instead. */
+let autoInject = true;
+
+/** Enable or disable automatic stylesheet injection on first scan. */
+export function setAutoInject(value) {
+  autoInject = !!value;
+}
+
+/** Whether the engine is allowed to inject its stylesheet itself. */
+export function autoInjectEnabled() {
+  return autoInject;
 }
