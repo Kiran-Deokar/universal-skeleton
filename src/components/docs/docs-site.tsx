@@ -316,7 +316,7 @@ export function DocsSite() {
       <footer className="mt-auto border-t border-border bg-background">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6">
           <p>
-            <span className="font-mono text-foreground/80">universal-skeleton</span> v1.2.1 · MIT License ·
+            <span className="font-mono text-foreground/80">universal-skeleton</span> v1.2.2 · MIT License ·
             zero runtime dependencies
           </p>
           <p>Every demo on this site runs the real library — scan the page and see.</p>
